@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, ScrollView, Animated } from 'react-native';
 import { Surface, useTheme, Portal } from 'react-native-paper';
 import { useDesign } from '../contexts/designContext';
@@ -13,69 +13,109 @@ type Props = {
 export function OverlayModal({ visible, content, onDismiss, dismissable = true }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
-  const opacity = React.useRef(new Animated.Value(0)).current;
+  
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
-      Animated.timing(opacity, {
+      Animated.spring(animatedValue, {
         toValue: 1,
-        duration: 300,
         useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
       }).start();
     }
   }, [visible]);
 
+  const hide = () => {
+    Animated.timing(animatedValue, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      onDismiss();
+    });
+  };
+
   if (!visible) return null;
+
+  const backdropOpacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const translateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [100, 0],
+  });
 
   return (
     <Portal>
-      <Animated.View style={[styles.fullscreen, { opacity }]}>
-        <TouchableWithoutFeedback onPress={dismissable ? onDismiss : undefined}>
-          <View style={styles.backdrop}>
+      <View style={styles.fullscreen}>
+        <TouchableWithoutFeedback onPress={dismissable ? hide : undefined}>
+          <Animated.View 
+            style={[
+              styles.backdrop, 
+              { opacity: backdropOpacity }
+            ]}
+          >
             <TouchableWithoutFeedback>
-              <Surface
-                style={[
-                  styles.content,
-                  { 
-                    backgroundColor: theme.colors.surface,
-                    borderRadius: tokens.radii.lg,
-                    padding: tokens.spacing.lg,
-                  }
-                ]}
-                elevation={5}
+              <Animated.View
+                renderToHardwareTextureAndroid={true}
+                style={{
+                  width: '100%',
+                  maxWidth: 500,
+                  maxHeight: '85%',
+                  transform: [{ translateY }],
+                  opacity: animatedValue,
+                  backgroundColor: 'transparent',
+                }}
               >
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {content}
-                </ScrollView>
-              </Surface>
+                <Surface
+                  style={[
+                    styles.surface,
+                    { 
+                      backgroundColor: theme.colors.surface,
+                      borderRadius: tokens.radii["2xl"],
+                    }
+                  ]}
+                  elevation={5}
+                >
+                  <View style={[styles.contentWrapper, { borderRadius: tokens.radii["2xl"] }]}>
+                    <ScrollView 
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={{ padding: tokens.spacing.xl }}
+                    >
+                      {content}
+                    </ScrollView>
+                  </View>
+                </Surface>
+              </Animated.View>
             </TouchableWithoutFeedback>
-          </View>
+          </Animated.View>
         </TouchableWithoutFeedback>
-      </Animated.View>
+      </View>
     </Portal>
   );
 }
 
 const styles = StyleSheet.create({
   fullscreen: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 26,
   },
-  content: {
+  surface: {
     width: '100%',
-    maxWidth: 500,
-    maxHeight: '80%',
+  },
+  contentWrapper: {
+    width: '100%',
+    overflow: 'hidden',
   },
 });

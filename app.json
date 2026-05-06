@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "v1",
-    "slug": "v1",
+    "name": "fah",
+    "slug": "fah",
     "version": "1.0.0",
-    "scheme": "v1-scheme",
+    "scheme": "fah",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

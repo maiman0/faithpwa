@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native';
-import { Surface, Text, Button, useTheme, Portal } from 'react-native-paper';
+import { Surface, Text, Button, useTheme, Portal, Icon } from 'react-native-paper';
 import { useDesign } from '../contexts/designContext';
 
 type Props = {
@@ -11,88 +11,159 @@ type Props = {
   onClose: () => void;
 };
 
-export function OverlayAlert({ visible, title, message, buttonText = 'OK', onClose }: Props) {
+export function OverlayAlert({ visible, title, message, buttonText = 'Got it', onClose }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
-  const opacity = React.useRef(new Animated.Value(0)).current;
+  
+  const animatedValue = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
-      Animated.timing(opacity, {
+      Animated.spring(animatedValue, {
         toValue: 1,
-        duration: 200,
         useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
+        tension: 65,
+        friction: 7,
       }).start();
     }
   }, [visible]);
 
+  const hide = () => {
+    Animated.timing(animatedValue, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
+
   if (!visible) return null;
+
+  const backdropOpacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const contentScale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.8, 1],
+  });
+
+  const contentTranslateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [50, 0],
+  });
 
   return (
     <Portal>
-      <Animated.View style={[styles.fullscreen, { opacity }]}>
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={styles.backdrop}>
+      <View style={styles.fullscreen}>
+        <TouchableWithoutFeedback onPress={hide}>
+          <Animated.View 
+            style={[
+              styles.backdrop, 
+              { opacity: backdropOpacity }
+            ]}
+          >
             <TouchableWithoutFeedback>
-              <Surface
-                style={[
-                  styles.content,
-                  { 
-                    backgroundColor: theme.colors.surface,
-                    borderRadius: tokens.radii.lg,
-                    padding: tokens.spacing.lg,
-                    gap: tokens.spacing.md,
-                  }
-                ]}
-                elevation={5}
+              <Animated.View
+                renderToHardwareTextureAndroid={true}
+                style={{
+                  width: '100%',
+                  maxWidth: 320,
+                  transform: [
+                    { scale: contentScale },
+                    { translateY: contentTranslateY }
+                  ],
+                  opacity: animatedValue,
+                  backgroundColor: 'transparent',
+                }}
               >
-                {title && (
-                  <Text variant="headlineSmall" style={{ color: theme.colors.onSurface }}>
-                    {title}
-                  </Text>
-                )}
-                {message && (
-                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {message}
-                  </Text>
-                )}
-                <View style={styles.actions}>
-                  <Button mode="contained" onPress={onClose} style={{ borderRadius: tokens.radii.md }}>
+                <Surface
+                  style={[
+                    styles.content,
+                    { 
+                      backgroundColor: theme.colors.surface,
+                      borderRadius: tokens.radii["2xl"],
+                      padding: tokens.spacing.xl,
+                      gap: tokens.spacing.lg,
+                    }
+                  ]}
+                  elevation={5}
+                >
+                  <View style={styles.header}>
+                    <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                      <Icon source="bell-outline" size={32} color={theme.colors.primary} />
+                    </View>
+                  </View>
+
+                  <View style={styles.body}>
+                    {title && (
+                      <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.onSurface }]}>
+                        {title}
+                      </Text>
+                    )}
+                    {message && (
+                      <Text variant="bodyMedium" style={[styles.message, { color: theme.colors.onSurfaceVariant }]}>
+                        {message}
+                      </Text>
+                    )}
+                  </View>
+
+                  <Button 
+                    mode="contained" 
+                    onPress={hide} 
+                    style={{ borderRadius: tokens.radii.pill, width: '100%' }}
+                    contentStyle={{ paddingVertical: 6 }}
+                  >
                     {buttonText}
                   </Button>
-                </View>
-              </Surface>
+                </Surface>
+              </Animated.View>
             </TouchableWithoutFeedback>
-          </View>
+          </Animated.View>
         </TouchableWithoutFeedback>
-      </Animated.View>
+      </View>
     </Portal>
   );
 }
 
 const styles = StyleSheet.create({
   fullscreen: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   content: {
     width: '100%',
-    maxWidth: 400,
+    alignItems: 'center',
   },
-  actions: {
-    alignItems: 'flex-end',
-    marginTop: 8,
+  header: {
+    marginBottom: 4,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  body: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  title: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  message: {
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

@@ -1,12 +1,10 @@
 {
-  "name": "v1",
+  "name": "fah",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "dev": "expo start --ios"
+    "go": "expo start --go",
+    "dev": "expo start --dev-client"
   },
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",

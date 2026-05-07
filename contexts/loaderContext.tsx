@@ -5,12 +5,15 @@ type LoaderContextType = {
   showLoader: (message?: string) => void;
   hideLoader: () => void;
   isLoading: boolean;
+  isRefreshing: boolean;
+  performRefresh: (task: () => Promise<void>, message?: string) => Promise<void>;
 };
 
 const LoaderContext = createContext<LoaderContextType | undefined>(undefined);
 
 export function LoaderProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [message, setMessage] = useState<string | undefined>(undefined);
 
   const showLoader = useCallback((msg?: string) => {
@@ -22,8 +25,19 @@ export function LoaderProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  const performRefresh = useCallback(async (task: () => Promise<void>, msg: string = "Refreshing...") => {
+    setIsRefreshing(true);
+    showLoader(msg);
+    try {
+      await task();
+    } finally {
+      hideLoader();
+      setIsRefreshing(false);
+    }
+  }, [showLoader, hideLoader]);
+
   return (
-    <LoaderContext.Provider value={{ showLoader, hideLoader, isLoading }}>
+    <LoaderContext.Provider value={{ showLoader, hideLoader, isLoading, isRefreshing, performRefresh }}>
       {children}
       <OverlayLoader visible={isLoading} message={message} />
     </LoaderContext.Provider>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, TouchableOpacity } from "react-native";
+import { View, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { Text, Button, Card, useTheme, Divider, Icon } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
@@ -22,7 +22,7 @@ export default function Main() {
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
   const { alert, confirm, toast, showModal, hideModal, showSheet, hideSheet } = useOverlay();
-  const { showLoader, hideLoader } = useLoader();
+  const { showLoader, hideLoader, performRefresh, isRefreshing } = useLoader();
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   useEffect(() => {
@@ -34,6 +34,17 @@ export default function Main() {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
+  };
+
+  const handleRefresh = async () => {
+    await performRefresh(async () => {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      toast({
+        message: "All data synchronized!",
+        variant: "success",
+      });
+    }, "Syncing Data...");
   };
 
   const handleAlert = () => {
@@ -169,6 +180,14 @@ export default function Main() {
           paddingHorizontal: tokens.spacing.xl,
           paddingBottom: tokens.spacing["3xl"],
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
       >
         <Header title="Overlay Demo" subtitle="Interactive Components" showBack />
 

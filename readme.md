@@ -1,4 +1,4 @@
-# Faith HRMS - Modern Employee Experience Platform
+# Dummy HRMS - Modern Employee Experience Platform
 
 A comprehensive, gamified Human Resource Management System (HRMS) built with Expo and React Native. Designed to provide employees with a seamless, immersive, and rewarding work experience.
 

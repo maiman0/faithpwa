@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Animated } from "react-native";
 import { ActivityIndicator, Portal, useTheme, Text } from "react-native-paper";
-import { useDesign } from "../contexts/designContext";
+import { useDesign } from "../../contexts/designContext";
 
 type Props = {
   visible: boolean;

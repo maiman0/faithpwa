@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, View, Pressable, Easing } from "react-native";
 import { Surface, Text, useTheme, Icon, Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useDesign } from "../contexts/designContext";
+import { useDesign } from "../../contexts/designContext";
 
 export type ToastVariant = "default" | "success" | "error" | "warning" | "info";
 

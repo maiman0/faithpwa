@@ -13,22 +13,28 @@ import {
   Portal,
   Icon,
 } from "react-native-paper";
-import { useDesign } from "../contexts/designContext";
+import { useDesign } from "../../contexts/designContext";
 
 type Props = {
   visible: boolean;
   title?: string;
   message?: string;
-  buttonText?: string;
-  onClose: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDestructive?: boolean;
 };
 
-export function OverlayAlert({
+export function OverlayConfirm({
   visible,
   title,
   message,
-  buttonText = "Got it",
-  onClose,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  onConfirm,
+  onCancel,
+  isDestructive = false,
 }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
@@ -46,12 +52,12 @@ export function OverlayAlert({
     }
   }, [visible]);
 
-  const hide = () => {
+  const hide = (callback: () => void) => {
     Animated.timing(animatedValue, {
       toValue: 0,
       duration: 150,
       useNativeDriver: true,
-    }).start(onClose);
+    }).start(callback);
   };
 
   if (!visible) return null;
@@ -71,6 +77,11 @@ export function OverlayAlert({
     outputRange: [20, 0],
   });
 
+  const accentColor = isDestructive ? theme.colors.error : theme.colors.primary;
+  const containerColor = isDestructive
+    ? theme.colors.errorContainer
+    : theme.colors.primaryContainer;
+
   return (
     <Portal>
       <View
@@ -83,9 +94,10 @@ export function OverlayAlert({
           zIndex: 1000,
           justifyContent: "center",
           alignItems: "center",
+          padding: tokens.spacing.xl,
         }}
       >
-        <TouchableWithoutFeedback onPress={hide}>
+        <TouchableWithoutFeedback onPress={() => hide(onCancel)}>
           <Animated.View
             style={{
               position: "absolute",
@@ -133,7 +145,8 @@ export function OverlayAlert({
             >
               <View
                 style={{
-                  paddingVertical: tokens.spacing.lg,
+                  paddingTop: tokens.spacing.lg,
+                  paddingBottom: tokens.spacing.md,
                   paddingHorizontal: tokens.spacing.md,
                   gap: tokens.spacing.md,
                   alignItems: "center",
@@ -146,23 +159,25 @@ export function OverlayAlert({
                     borderRadius: 40,
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: theme.colors.primaryContainer,
+                    backgroundColor: containerColor,
                     borderWidth: 4,
                     borderColor: theme.colors.surface,
                   }}
                 >
                   <Icon
-                    source="bell-outline"
+                    source={
+                      isDestructive ? "alert-outline" : "help-circle-outline"
+                    }
                     size={36}
-                    color={theme.colors.primary}
+                    color={accentColor}
                   />
                 </View>
 
                 <View
                   style={{
+                    width: "100%",
                     alignItems: "center",
                     gap: tokens.spacing.xs,
-                    width: "100%",
                   }}
                 >
                   {title && (
@@ -192,20 +207,47 @@ export function OverlayAlert({
                   )}
                 </View>
 
-                <Button
-                  mode="contained"
-                  onPress={hide}
+                <View
                   style={{
                     width: "100%",
-                    borderRadius: tokens.radii.pill,
-                    marginTop: tokens.spacing.xs,
-                  }}
-                  contentStyle={{
-                    paddingVertical: tokens.spacing.xs,
+                    gap: tokens.spacing.xs,
                   }}
                 >
-                  {buttonText}
-                </Button>
+                  <Button
+                    mode="contained"
+                    onPress={() => hide(onConfirm)}
+                    buttonColor={accentColor}
+                    textColor={
+                      isDestructive
+                        ? theme.colors.onError
+                        : theme.colors.onPrimary
+                    }
+                    style={{
+                      width: "100%",
+                      borderRadius: tokens.radii.pill,
+                    }}
+                    contentStyle={{
+                      paddingVertical: tokens.spacing.xs,
+                    }}
+                  >
+                    {confirmText}
+                  </Button>
+
+                  <Button
+                    mode="text"
+                    onPress={() => hide(onCancel)}
+                    textColor={theme.colors.onSurfaceVariant}
+                    style={{
+                      width: "100%",
+                      borderRadius: tokens.radii.pill,
+                    }}
+                    contentStyle={{
+                      paddingVertical: tokens.spacing.xs,
+                    }}
+                  >
+                    {cancelText}
+                  </Button>
+                </View>
               </View>
 
               {/* Accent Indicator */}
@@ -213,7 +255,7 @@ export function OverlayAlert({
                 style={{
                   height: 4,
                   width: "100%",
-                  backgroundColor: theme.colors.primary,
+                  backgroundColor: accentColor,
                   opacity: 0.8,
                 }}
               />

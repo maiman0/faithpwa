@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { Surface, useTheme, Portal } from "react-native-paper";
-import { useDesign } from "../contexts/designContext";
+import { useDesign } from "../../contexts/designContext";
 
 type Props = {
   visible: boolean;

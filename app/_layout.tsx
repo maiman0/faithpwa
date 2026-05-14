@@ -57,7 +57,10 @@ function AppContent() {
     <View
       style={{
         flex: 1,
-        backgroundColor: Platform.OS === "web" ? theme.colors.surfaceVariant : theme.colors.background,
+        backgroundColor:
+          Platform.OS === "web"
+            ? theme.colors.surfaceVariant
+            : theme.colors.background,
         alignItems: "center",
       }}
     >
@@ -67,6 +70,7 @@ function AppContent() {
           width: "100%",
           maxWidth: 500,
           backgroundColor: theme.colors.background,
+          overflow: "hidden",
           ...(Platform.OS === "web" && {
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 0 },
@@ -81,7 +85,9 @@ function AppContent() {
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: theme.colors.background },
+            contentStyle: {
+              backgroundColor: theme.colors.background,
+            },
           }}
         />
       </View>

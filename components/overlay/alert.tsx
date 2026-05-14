@@ -13,28 +13,22 @@ import {
   Portal,
   Icon,
 } from "react-native-paper";
-import { useDesign } from "../contexts/designContext";
+import { useDesign } from "../../contexts/designContext";
 
 type Props = {
   visible: boolean;
   title?: string;
   message?: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  isDestructive?: boolean;
+  buttonText?: string;
+  onClose: () => void;
 };
 
-export function OverlayConfirm({
+export function OverlayAlert({
   visible,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  onConfirm,
-  onCancel,
-  isDestructive = false,
+  buttonText = "Got it",
+  onClose,
 }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
@@ -52,12 +46,12 @@ export function OverlayConfirm({
     }
   }, [visible]);
 
-  const hide = (callback: () => void) => {
+  const hide = () => {
     Animated.timing(animatedValue, {
       toValue: 0,
       duration: 150,
       useNativeDriver: true,
-    }).start(callback);
+    }).start(onClose);
   };
 
   if (!visible) return null;
@@ -77,11 +71,6 @@ export function OverlayConfirm({
     outputRange: [20, 0],
   });
 
-  const accentColor = isDestructive ? theme.colors.error : theme.colors.primary;
-  const containerColor = isDestructive
-    ? theme.colors.errorContainer
-    : theme.colors.primaryContainer;
-
   return (
     <Portal>
       <View
@@ -94,10 +83,9 @@ export function OverlayConfirm({
           zIndex: 1000,
           justifyContent: "center",
           alignItems: "center",
-          padding: tokens.spacing.xl,
         }}
       >
-        <TouchableWithoutFeedback onPress={() => hide(onCancel)}>
+        <TouchableWithoutFeedback onPress={hide}>
           <Animated.View
             style={{
               position: "absolute",
@@ -145,8 +133,7 @@ export function OverlayConfirm({
             >
               <View
                 style={{
-                  paddingTop: tokens.spacing.lg,
-                  paddingBottom: tokens.spacing.md,
+                  paddingVertical: tokens.spacing.lg,
                   paddingHorizontal: tokens.spacing.md,
                   gap: tokens.spacing.md,
                   alignItems: "center",
@@ -159,25 +146,23 @@ export function OverlayConfirm({
                     borderRadius: 40,
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: containerColor,
+                    backgroundColor: theme.colors.primaryContainer,
                     borderWidth: 4,
                     borderColor: theme.colors.surface,
                   }}
                 >
                   <Icon
-                    source={
-                      isDestructive ? "alert-outline" : "help-circle-outline"
-                    }
+                    source="bell-outline"
                     size={36}
-                    color={accentColor}
+                    color={theme.colors.primary}
                   />
                 </View>
 
                 <View
                   style={{
-                    width: "100%",
                     alignItems: "center",
                     gap: tokens.spacing.xs,
+                    width: "100%",
                   }}
                 >
                   {title && (
@@ -207,47 +192,20 @@ export function OverlayConfirm({
                   )}
                 </View>
 
-                <View
+                <Button
+                  mode="contained"
+                  onPress={hide}
                   style={{
                     width: "100%",
-                    gap: tokens.spacing.xs,
+                    borderRadius: tokens.radii.pill,
+                    marginTop: tokens.spacing.xs,
+                  }}
+                  contentStyle={{
+                    paddingVertical: tokens.spacing.xs,
                   }}
                 >
-                  <Button
-                    mode="contained"
-                    onPress={() => hide(onConfirm)}
-                    buttonColor={accentColor}
-                    textColor={
-                      isDestructive
-                        ? theme.colors.onError
-                        : theme.colors.onPrimary
-                    }
-                    style={{
-                      width: "100%",
-                      borderRadius: tokens.radii.pill,
-                    }}
-                    contentStyle={{
-                      paddingVertical: tokens.spacing.xs,
-                    }}
-                  >
-                    {confirmText}
-                  </Button>
-
-                  <Button
-                    mode="text"
-                    onPress={() => hide(onCancel)}
-                    textColor={theme.colors.onSurfaceVariant}
-                    style={{
-                      width: "100%",
-                      borderRadius: tokens.radii.pill,
-                    }}
-                    contentStyle={{
-                      paddingVertical: tokens.spacing.xs,
-                    }}
-                  >
-                    {cancelText}
-                  </Button>
-                </View>
+                  {buttonText}
+                </Button>
               </View>
 
               {/* Accent Indicator */}
@@ -255,7 +213,7 @@ export function OverlayConfirm({
                 style={{
                   height: 4,
                   width: "100%",
-                  backgroundColor: accentColor,
+                  backgroundColor: theme.colors.primary,
                   opacity: 0.8,
                 }}
               />

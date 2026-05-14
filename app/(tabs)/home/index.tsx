@@ -39,9 +39,7 @@ export default function Home() {
           paddingBottom: tokens.spacing["3xl"],
         }}
         showsVerticalScrollIndicator={false}
-      >
-
-      </ScrollView>
+      ></ScrollView>
 
       <ScrollTop visible={showScrollTop} onPress={scrollToTop} />
     </>

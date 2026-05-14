@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TouchableWithoutFeedback, 
-  ScrollView, 
-  Animated, 
-  Dimensions, 
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  ScrollView,
+  Animated,
+  Dimensions,
   PanResponder,
-  Platform 
-} from 'react-native';
-import { useTheme, Portal, Text } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDesign } from '../contexts/designContext';
+  Platform,
+} from "react-native";
+import { useTheme, Portal, Text } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDesign } from "../../contexts/designContext";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const SWIPE_THRESHOLD = 80;
 
 type Props = {
@@ -27,7 +27,7 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
   const insets = useSafeAreaInsets();
-  
+
   const [contentHeight, setContentHeight] = useState(0);
   const pan = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -38,11 +38,14 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 5 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        return (
+          Math.abs(gestureState.dy) > 5 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy < 0) {
-          pan.setValue(gestureState.dy * 0.1); 
+          pan.setValue(gestureState.dy * 0.1);
         } else {
           pan.setValue(gestureState.dy);
         }
@@ -59,7 +62,7 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
           }).start();
         }
       },
-    })
+    }),
   ).current;
 
   useEffect(() => {
@@ -94,7 +97,7 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
       }),
     ]).start(() => {
       onDismiss();
-      pan.setValue(SCREEN_HEIGHT); 
+      pan.setValue(SCREEN_HEIGHT);
     });
   };
 
@@ -104,11 +107,8 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
     <Portal>
       <View style={styles.fullscreen}>
         <TouchableWithoutFeedback onPress={hide}>
-          <Animated.View 
-            style={[
-              styles.backdrop, 
-              { opacity: backdropOpacity }
-            ]}
+          <Animated.View
+            style={[styles.backdrop, { opacity: backdropOpacity }]}
           />
         </TouchableWithoutFeedback>
 
@@ -124,13 +124,13 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
               borderTopRightRadius: tokens.radii["2xl"],
               // Robust Skirt for Android:
               // Physically make the view 1000px taller at the bottom
-              paddingBottom: 1000, 
+              paddingBottom: 1000,
               marginBottom: -1000,
-            }
+            },
           ]}
         >
           {/* Inner Content Wrapper for Measurement */}
-          <View 
+          <View
             onLayout={(e) => {
               const h = e.nativeEvent.layout.height;
               if (h > 0) setContentHeight(h);
@@ -139,27 +139,33 @@ export function OverlaySheet({ visible, title, content, onDismiss }: Props) {
           >
             {/* Header & Grabber */}
             <View style={styles.headerContainer}>
-              <View style={[styles.grabber, { backgroundColor: theme.colors.outlineVariant }]} />
+              <View
+                style={[
+                  styles.grabber,
+                  { backgroundColor: theme.colors.outlineVariant },
+                ]}
+              />
               {title && (
-                <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+                <Text
+                  variant="titleLarge"
+                  style={[styles.title, { color: theme.colors.onSurface }]}
+                >
                   {title}
                 </Text>
               )}
             </View>
 
-            <ScrollView 
+            <ScrollView
               showsVerticalScrollIndicator={false}
               bounces={false}
               overScrollMode="never"
-              contentContainerStyle={{ 
+              contentContainerStyle={{
                 paddingHorizontal: tokens.spacing.xl,
                 paddingBottom: insets.bottom + tokens.spacing.xl,
               }}
             >
               <TouchableWithoutFeedback>
-                <View>
-                  {content}
-                </View>
+                <View>{content}</View>
               </TouchableWithoutFeedback>
             </ScrollView>
           </View>
@@ -173,18 +179,18 @@ const styles = StyleSheet.create({
   fullscreen: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   sheetContainer: {
-    width: '100%',
-    overflow: 'visible', // Ensure the bottom padding isn't clipped
+    width: "100%",
+    overflow: "visible", // Ensure the bottom padding isn't clipped
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: -10 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
@@ -195,8 +201,8 @@ const styles = StyleSheet.create({
     }),
   },
   headerContainer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     paddingTop: 12,
     paddingBottom: 8,
   },
@@ -207,7 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
 });

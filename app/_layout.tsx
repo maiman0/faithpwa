@@ -64,6 +64,10 @@ function AppContent() {
 
   useEffect(() => {
     if (Platform.OS === "web") {
+      // 1. Disable native overscroll refresh/rubber-banding
+      document.body.style.overscrollBehavior = "none";
+      document.documentElement.style.overscrollBehavior = "none";
+
       const color = isOverlayActive
         ? "#9c9ea0"
         : !isMobileWidth
@@ -93,6 +97,8 @@ function AppContent() {
             ? theme.colors.surfaceVariant
             : theme.colors.background,
         alignItems: "center",
+        // @ts-ignore - overscrollBehavior is supported on web
+        overscrollBehavior: "none",
       }}
     >
       <Head>

@@ -29,7 +29,7 @@ export default function PickerModal<T>({
   return (
     <View
       style={{
-        gap: tokens.spacing.xl,
+        gap: tokens.spacing.md,
       }}
     >
       <View
@@ -49,7 +49,7 @@ export default function PickerModal<T>({
 
       <View
         style={{
-          gap: tokens.spacing.md,
+          gap: tokens.spacing.sm,
         }}
       >
         {data.map((item) => {
@@ -64,19 +64,19 @@ export default function PickerModal<T>({
                 flexDirection: "row",
                 alignItems: "center",
                 gap: tokens.spacing.lg,
-                padding: tokens.spacing.lg,
+                padding: tokens.spacing.md,
                 borderRadius: tokens.radii["2xl"],
                 backgroundColor: isSelected
                   ? colors.primaryContainer
                   : colors.surfaceVariant,
-                opacity: pressed ? 0.9 : 1,
+                opacity: pressed ? 0.92 : 1,
               })}
             >
               <View
                 style={{
                   width: 52,
                   height: 52,
-                  borderRadius: tokens.radii.full,
+                  borderRadius: 18,
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: isSelected ? colors.primary : colors.surface,
@@ -92,20 +92,33 @@ export default function PickerModal<T>({
               </View>
 
               <Text
-                variant="bodyLarge"
+                variant="titleSmall"
                 style={{
                   flex: 1,
-                  fontWeight: "600",
+                  fontWeight: "700",
                 }}
               >
                 {labelExtractor(item)}
               </Text>
 
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={22}
-                color={colors.onSurfaceVariant}
-              />
+              {isSelected && (
+                <View
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: tokens.radii.full,
+                    backgroundColor: colors.primary,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={14}
+                    color={colors.onPrimary}
+                  />
+                </View>
+              )}
             </Pressable>
           );
         })}

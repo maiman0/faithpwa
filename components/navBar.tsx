@@ -5,7 +5,9 @@ import { usePathname, router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
 import { useTabs } from "../contexts/tabContext";
+import { useOverlay } from "../contexts/overlayContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import PickerModal from "./pickerModal";
 
 export function NavBar() {
   const theme = useTheme();
@@ -13,6 +15,7 @@ export function NavBar() {
   const pathname = usePathname();
   const { signOut } = useAuth();
   const { hideTabBar } = useTabs();
+  const { showModal, hideModal } = useOverlay();
 
   const isHome =
     pathname.startsWith("/home") || pathname.startsWith("/(tabs)/home");
@@ -33,10 +36,51 @@ export function NavBar() {
 
   const handleActionButton = () => {
     if (isHome) {
-      router.push("/(tabs)/home/main");
-    } else {
-      signOut();
+      showModal({
+        content: (
+          <PickerModal
+            title="Quick Actions"
+            data={[
+              {
+                id: "attendance",
+                label: "Manage Attendance",
+                route: "home/attendance",
+                icon: "calendar-check",
+              },
+              {
+                id: "leave",
+                label: "Add Leave",
+                route: "home/leave",
+                icon: "calendar-remove",
+              },
+              {
+                id: "performance",
+                label: "Performance Review",
+                route: "home/performance",
+                icon: "chart-line",
+              },
+              {
+                id: "main",
+                label: "Demo Component",
+                route: "home/main",
+                icon: "flask",
+              },
+            ]}
+            onSelect={(item) => {
+              hideModal();
+              router.push(item.route as any);
+            }}
+            keyExtractor={(item) => item.id}
+            labelExtractor={(item) => item.label}
+            iconExtractor={(item) => item.icon as any}
+          />
+        ),
+      });
+
+      return;
     }
+
+    signOut();
   };
 
   const navigateTo = (route: string) => {
@@ -110,6 +154,7 @@ export function NavBar() {
                   : theme.colors.onSurfaceVariant
               }
             />
+
             <Text
               variant="labelSmall"
               style={{

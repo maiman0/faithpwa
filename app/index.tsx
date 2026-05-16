@@ -8,8 +8,6 @@ import {
   Image,
 } from "react-native";
 import { Text, TextInput, Button, useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
 
@@ -78,7 +76,6 @@ export default function Login() {
             flex: 1,
             justifyContent: "center",
             paddingHorizontal: tokens.spacing.xl,
-            paddingVertical: tokens.spacing["3xl"],
             alignItems: "center",
           }}
         >
@@ -88,8 +85,8 @@ export default function Login() {
               maxWidth: 420,
               borderRadius: tokens.radii.xl,
               backgroundColor: theme.colors.surface,
-              padding: tokens.spacing["2xl"],
-              gap: tokens.spacing["2xl"],
+              padding: tokens.spacing.lg,
+              gap: tokens.spacing.md,
               ...(Platform.OS === "web" && {
                 borderWidth: 1,
                 borderColor: theme.colors.outlineVariant,
@@ -229,7 +226,7 @@ export default function Login() {
                     lineHeight: 18
                   }}
                 >
-                  Reach system admin if you need help or have trouble signing in.
+                  Reach system admin if you need help signing in.
                 </Text>
               </View>
             </View>

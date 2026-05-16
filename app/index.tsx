@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   KeyboardAvoidingView,
@@ -6,6 +6,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  TextInput as RNTextInput,
 } from "react-native";
 import { Text, TextInput, Button, useTheme } from "react-native-paper";
 import { useDesign } from "../contexts/designContext";
@@ -16,6 +17,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const passwordRef = useRef<RNTextInput>(null);
 
   const theme = useTheme();
   const tokens = useDesign();
@@ -86,8 +89,8 @@ export default function Login() {
               maxWidth: 420,
               borderRadius: tokens.radii.xl,
               backgroundColor: theme.colors.surface,
-              padding: tokens.spacing.lg,
-              gap: tokens.spacing.md,
+              padding: tokens.spacing["2xl"],
+              gap: tokens.spacing.xl,
               ...(Platform.OS === "web" && {
                 borderWidth: 1,
                 borderColor: theme.colors.outlineVariant,
@@ -101,14 +104,14 @@ export default function Login() {
             <View
               style={{
                 alignItems: "center",
-                gap: tokens.spacing.lg,
+                gap: tokens.spacing.xl,
               }}
             >
               <Image
                 source={require("../assets/img/logo.png")}
                 style={{
-                  width: 120,
-                  height: 120,
+                  width: 140,
+                  height: 140,
                   resizeMode: "contain",
                 }}
               />
@@ -116,14 +119,15 @@ export default function Login() {
               <View
                 style={{
                   alignItems: "center",
-                  gap: tokens.spacing.sm,
+                  gap: tokens.spacing.xs,
                 }}
               >
                 <Text
                   variant="headlineMedium"
                   style={{
-                    fontWeight: "700",
+                    fontWeight: "800",
                     textAlign: "center",
+                    letterSpacing: -0.5,
                   }}
                 >
                   Sign In
@@ -144,7 +148,7 @@ export default function Login() {
 
             <View
               style={{
-                gap: tokens.spacing.lg,
+                gap: tokens.spacing.sm,
               }}
             >
               <TextInput
@@ -155,6 +159,7 @@ export default function Login() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 outlineStyle={{
                   borderRadius: tokens.radii.lg,
                   borderColor: theme.colors.outline,
@@ -171,6 +176,7 @@ export default function Login() {
               />
 
               <TextInput
+                ref={passwordRef}
                 label="Password"
                 mode="outlined"
                 value={password}
@@ -201,7 +207,7 @@ export default function Login() {
               />
             </View>
 
-            <View style={{ gap: tokens.spacing.md }}>
+            <View style={{ gap: tokens.spacing.xl }}>
               <Button
                 mode="contained"
                 onPress={handleLogin}
@@ -218,11 +224,10 @@ export default function Login() {
                   fontSize: 16,
                 }}
               >
-                Sign In
+                Authenticate to FAITH
               </Button>
 
               <View style={{ 
-                marginTop: tokens.spacing.sm,
                 alignItems: 'center'
               }}>
                 <Text 

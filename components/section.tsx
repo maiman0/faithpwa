@@ -47,7 +47,7 @@ export default function SectionHeader({
               width: 40,
               height: 40,
               borderRadius: tokens.radii.full,
-              backgroundColor: colors.primary,
+              backgroundColor: colors.primaryContainer,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -55,7 +55,7 @@ export default function SectionHeader({
             <MaterialCommunityIcons
               name={icon}
               size={20}
-              color={colors.onPrimary}
+              color={colors.onPrimaryContainer}
             />
           </View>
         )}

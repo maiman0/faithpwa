@@ -116,7 +116,7 @@ export default function Head({
             variant="labelLarge"
             style={{
               fontWeight: "700",
-              color: colors.primary,
+              color: colors.onPrimaryContainer,
             }}
           >
             {avatarText}

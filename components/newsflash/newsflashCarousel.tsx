@@ -10,7 +10,6 @@ const { width } = Dimensions.get("window");
 
 const SIDE_PADDING = 24;
 const SPACING = 16;
-
 const CARD_WIDTH = width - SIDE_PADDING * 2 - 32;
 
 export default function NewsflashCarousel() {
@@ -45,7 +44,7 @@ export default function NewsflashCarousel() {
   return (
     <View
       style={{
-        gap: tokens.spacing.md,
+        gap: tokens.spacing.sm,
       }}
     >
       <ScrollView
@@ -58,7 +57,6 @@ export default function NewsflashCarousel() {
         disableIntervalMomentum
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: SIDE_PADDING,
           gap: SPACING,
         }}
       >

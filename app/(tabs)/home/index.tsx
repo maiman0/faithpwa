@@ -59,8 +59,6 @@ export default function Home() {
         />
         <AttendanceCard />
 
-        <NewsflashCarousel />
-
         <SectionHeader
           icon="calendar-check"
           title="Leave"
@@ -73,16 +71,18 @@ export default function Home() {
           left={{
             icon: "clock-outline",
             label: "Pending Leave",
-            value: "2",
+            value: "0",
             color: "#F59E0B",
           }}
           right={{
             icon: "briefcase-outline",
             label: "Annual Balance",
-            value: "12",
+            value: "0",
             color: "#10B981",
           }}
         />
+
+        <NewsflashCarousel />
 
         <SectionHeader
           icon="door-sliding"
@@ -96,13 +96,13 @@ export default function Home() {
           left={{
             icon: "door-open",
             label: "Active Booking",
-            value: "3",
+            value: "0",
             color: "#3B82F6",
           }}
           right={{
             icon: "history",
             label: "Booking History",
-            value: "18",
+            value: "0",
             color: "#8B5CF6",
           }}
         />

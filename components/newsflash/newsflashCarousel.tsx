@@ -24,11 +24,21 @@ export default function NewsflashCarousel() {
   const router = useRouter();
 
   const translateX = useRef(new Animated.Value(0)).current;
+  const progress = useRef(new Animated.Value(0)).current;
   const carouselData = newsflashes.slice(0, 3);
   const [activeIndex, setActiveIndex] = useState(0);
   const [acknowledgedIds, setAcknowledgedIds] = useState<number[]>([]);
 
   useEffect(() => {
+    // Reset and start progress bar animation
+    progress.setValue(0);
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 4000,
+      easing: Easing.linear,
+      useNativeDriver: false, // width cannot use native driver
+    }).start();
+
     const interval = setInterval(() => {
       const nextIndex =
         activeIndex >= carouselData.length - 1 ? 0 : activeIndex + 1;
@@ -61,9 +71,10 @@ export default function NewsflashCarousel() {
             transform: [{ translateX }],
           }}
         >
-          {carouselData.map((item) => {
+          {carouselData.map((item, index) => {
             const priority = newsflashPriorities[item.priority];
             const acknowledged = acknowledgedIds.includes(item.id);
+            const isActive = index === activeIndex;
 
             return (
               <Pressable
@@ -207,6 +218,32 @@ export default function NewsflashCarousel() {
                         acknowledged ? colors.onSurfaceVariant : colors.primary
                       }
                     />
+                  </View>
+
+                  {/* Progress Indicator */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 4,
+                      backgroundColor: colors.surfaceVariant,
+                      opacity: 0.5,
+                    }}
+                  >
+                    {isActive && (
+                      <Animated.View
+                        style={{
+                          height: "100%",
+                          backgroundColor: priority.color,
+                          width: progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ["0%", "100%"],
+                          }),
+                        }}
+                      />
+                    )}
                   </View>
                 </View>
               </Pressable>

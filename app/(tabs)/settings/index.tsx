@@ -4,8 +4,17 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   View,
+  TouchableOpacity,
 } from "react-native";
-import { useTheme, Text, Card, List, Divider } from "react-native-paper";
+import {
+  useTheme,
+  Text,
+  Card,
+  Divider,
+  Avatar,
+  Chip,
+} from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import { useOverlay } from "../../../contexts/overlayContext";
@@ -21,100 +30,140 @@ export default function Settings() {
   const { onScroll } = useTabs();
   const { toast } = useOverlay();
   const router = useRouter();
+
   const scrollRef = useRef<ScrollView | null>(null);
+
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
+
     setShowScrollTop(offset > 300);
+
     onScroll(offset);
   };
 
   const scrollToTop = () => {
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    scrollRef.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
   };
 
+  const settings = [
+
+    {
+      title: "Preferences",
+      subtitle: "Customize your app experience",
+      icon: "tune-variant",
+      onPress: () => toast("Coming soon"),
+    },
+
+    {
+      title: "Help & Support",
+      subtitle: "Get assistance and support",
+      icon: "help-circle-outline",
+      onPress: () => toast("Coming soon"),
+    },
+  ];
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+      }}
+    >
       <ScrollView
         ref={scrollRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: tokens.spacing.md,
           paddingBottom: tokens.spacing["3xl"],
           paddingHorizontal: tokens.spacing.lg,
-          gap: tokens.spacing.md,
+          gap: tokens.spacing.lg,
         }}
-        showsVerticalScrollIndicator={false}
       >
         <Tail
-          avatarText={user?.avatarText || "U"}
-          username={user?.name || "User"}
-          staffId={user?.staffId || "----"}
-          designation={user?.designation || ""}
+          username={user?.name}
+          designation={user?.designation}
+          staffId={user?.staffId}
+          avatarText={user?.avatarText}
           onUpdateProfilePress={() => router.push("settings/update")}
         />
-        {/* Preferences Section */}
-        <View style={{ gap: tokens.spacing.md }}>
-          <Text
-            variant="titleMedium"
-            style={{ fontWeight: "bold", marginLeft: 4 }}
-          >
-            App Preferences
-          </Text>
+        <Card
+          mode="contained"
+          style={{
+            borderRadius: tokens.radii.xl,
+            backgroundColor: theme.colors.surface,
+          }}
+        >
+          <View>
+            {settings.map((item, index) => (
+              <View key={item.title}>
+                <TouchableOpacity activeOpacity={0.9} onPress={item.onPress}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: tokens.spacing.md,
+                      paddingHorizontal: tokens.spacing.lg,
+                      paddingVertical: tokens.spacing.lg,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: tokens.radii.lg,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: theme.colors.surfaceVariant,
+                      }}
+                    >
+                      <MaterialCommunityIcons
+                        name={item.icon as any}
+                        size={22}
+                        color={theme.colors.primary}
+                      />
+                    </View>
 
-          <Card
-            mode="contained"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderRadius: tokens.radii.lg,
-            }}
-          >
-            <List.Item
-              title="Language"
-              description="English (US)"
-              left={(props) => <List.Icon {...props} icon="translate" />}
-              onPress={() => toast("Language settings")}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            />
-          </Card>
-        </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        variant="titleSmall"
+                        style={{
+                          fontWeight: "700",
+                        }}
+                      >
+                        {item.title}
+                      </Text>
 
-        {/* Support Section */}
-        <View style={{ gap: tokens.spacing.md }}>
-          <Text
-            variant="titleMedium"
-            style={{ fontWeight: "bold", marginLeft: 4 }}
-          >
-            Support
-          </Text>
+                      <Text
+                        variant="bodySmall"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                          marginTop: 2,
+                        }}
+                      >
+                        {item.subtitle}
+                      </Text>
+                    </View>
 
-          <Card
-            mode="contained"
-            style={{
-              backgroundColor: theme.colors.surface,
-              borderRadius: tokens.radii.lg,
-            }}
-          >
-            <List.Item
-              title="Help Center"
-              left={(props) => (
-                <List.Icon {...props} icon="help-circle-outline" />
-              )}
-              onPress={() => toast("Opening Help Center")}
-              right={(props) => <List.Icon {...props} icon="open-in-new" />}
-            />
-            <Divider />
-            <List.Item
-              title="Privacy Policy"
-              left={(props) => (
-                <List.Icon {...props} icon="shield-check-outline" />
-              )}
-              onPress={() => toast("Viewing Privacy Policy")}
-            />
-          </Card>
-        </View>
+                    <MaterialCommunityIcons
+                      name="chevron-right"
+                      size={22}
+                      color={theme.colors.onSurfaceVariant}
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                {index !== settings.length - 1 && <Divider />}
+              </View>
+            ))}
+          </View>
+        </Card>
       </ScrollView>
 
       <ScrollTop visible={showScrollTop} onPress={scrollToTop} />

@@ -1,109 +1,231 @@
 import React from "react";
-import { View } from "react-native";
-import { Text, useTheme, Button } from "react-native-paper";
+import { View, TouchableOpacity } from "react-native";
+import { Text, useTheme, Avatar, Divider } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
 
 type TailProps = {
-  avatarText: string;
-  username: string;
-  staffId: string;
-  designation: string;
+  avatarText?: string;
+  username?: string;
+  staffId?: string;
+  designation?: string;
   onUpdateProfilePress?: () => void;
 };
 
 export default function Tail({
-  avatarText,
-  username,
-  staffId,
-  designation,
+  avatarText = "??",
+  username = "Guest User",
+  staffId = "N/A",
+  designation = "No Designation",
   onUpdateProfilePress,
 }: TailProps) {
-  const { colors } = useTheme();
+  const theme = useTheme();
   const tokens = useDesign();
+
+  const details = [
+    {
+      label: "Full Name",
+      value: "Aiman Hakim Bin Mohd",
+      icon: "account-box-outline",
+    },
+    {
+      label: "Email Address",
+      value: "daiman@company.com",
+      icon: "email-outline",
+    },
+    { label: "Contact Number", value: "+6012 345 6789", icon: "phone-outline" },
+    {
+      label: "Address",
+      value: "Level 25, Menara Faith, Jalan Bukit Bintang, 55100 KL",
+      icon: "office-building-marker-outline",
+    },
+  ];
 
   return (
     <View
       style={{
-        alignItems: "center",
-        gap: tokens.spacing.md,
+        borderRadius: tokens.radii["2xl"],
+        backgroundColor: theme.colors.elevation.level1,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: theme.colors.outlineVariant,
       }}
     >
+      {/* Abstract Decorative Background Icon */}
       <View
         style={{
-          width: 92,
-          height: 92,
-          borderRadius: tokens.radii.full,
-          backgroundColor: colors.primaryContainer,
-          alignItems: "center",
-          justifyContent: "center",
+          position: "absolute",
+          top: -30,
+          left: -30,
+          opacity: 0.03,
+          transform: [{ rotate: "-15deg" }],
         }}
       >
-        <Text
-          variant="headlineMedium"
-          style={{
-            fontWeight: "700",
-            color: colors.primary,
-          }}
-        >
-          {avatarText}
-        </Text>
+        <MaterialCommunityIcons
+          name="hexagon-multiple-outline"
+          size={240}
+          color={theme.colors.primary}
+        />
       </View>
 
       <View
         style={{
+          padding: tokens.spacing.lg,
           alignItems: "center",
-          gap: 4,
+          gap: tokens.spacing.md,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: tokens.spacing.sm,
-          }}
-        >
-          <Text
-            variant="titleMedium"
+        {/* Profile Header Section */}
+        <View style={{ alignItems: "center", gap: tokens.spacing.md }}>
+          <View
             style={{
-              fontWeight: "700",
+              padding: 6,
+              borderRadius: tokens.radii.full,
+              borderWidth: 2,
+              borderColor: theme.colors.primaryContainer,
+              backgroundColor: theme.colors.surface,
             }}
           >
-            {username}
-          </Text>
+            <Avatar.Text
+              size={100}
+              label={avatarText}
+              style={{
+                backgroundColor: theme.colors.primaryContainer,
+              }}
+              labelStyle={{
+                color: theme.colors.onPrimaryContainer,
+                fontWeight: "900",
+                fontSize: 36,
+              }}
+            />
+          </View>
 
-          <Text
-            variant="bodyMedium"
-            style={{
-              color: colors.onSurfaceVariant,
-            }}
-          >
-            #{staffId}
-          </Text>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              variant="headlineSmall"
+              style={{
+                fontWeight: "900",
+                color: theme.colors.onSurface,
+                letterSpacing: -1,
+              }}
+            >
+              {username}
+
+              <Text
+                style={{
+                  color: theme.colors.primary,
+                  opacity: 0.6,
+                  fontSize: 16,
+                  fontWeight: "700",
+                }}
+              >
+                {" "}
+                #{staffId}
+              </Text>
+            </Text>
+          </View>
         </View>
 
-        <Text
-          variant="bodySmall"
-          style={{
-            color: colors.onSurfaceVariant,
-          }}
-        >
-          {designation}
-        </Text>
-      </View>
+        <Divider style={{ width: "100%", opacity: 0.5 }} />
 
-      <Button
-        mode="outlined"
-        onPress={onUpdateProfilePress}
-        style={{
-          borderRadius: tokens.radii.full,
-          borderColor: colors.primary,
-        }}
-        labelStyle={{
-          fontWeight: "600",
-        }}
-      >
-        Update Profile
-      </Button>
+        {/* Details Section */}
+        <View style={{ width: "100%", gap: tokens.spacing.md }}>
+          {details.map((item, idx) => (
+            <View
+              key={idx}
+              style={{
+                flexDirection: "row",
+                gap: tokens.spacing.md,
+                alignItems: "flex-start",
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: tokens.radii.lg,
+                  backgroundColor: theme.colors.surface,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: theme.colors.outlineVariant,
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={item.icon as any}
+                  size={18}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <View style={{ flex: 1, gap: 1 }}>
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                    fontSize: 10,
+                    fontWeight: "700",
+                  }}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurface,
+                    fontWeight: "600",
+                    lineHeight: 20,
+                  }}
+                >
+                  {item.value}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {onUpdateProfilePress && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onUpdateProfilePress}
+            style={{
+              width: "100%",
+              height: 56,
+              borderRadius: tokens.radii.xl,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: theme.colors.primary,
+              flexDirection: "row",
+              gap: tokens.spacing.sm,
+              marginTop: tokens.spacing.sm,
+              shadowColor: theme.colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="account-cog"
+              size={20}
+              color={theme.colors.onPrimary}
+            />
+
+            <Text
+              variant="labelLarge"
+              style={{
+                color: theme.colors.onPrimary,
+                fontWeight: "800",
+                letterSpacing: 1,
+              }}
+            >
+              UPDATE WORKSPACE PROFILE
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }

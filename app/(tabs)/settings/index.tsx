@@ -53,7 +53,7 @@ export default function Settings() {
           username={user?.name || "User"}
           staffId={user?.staffId || "----"}
           designation={user?.designation || ""}
-          onUpdateProfilePress={() => router.push("settings/profile")}
+          onUpdateProfilePress={() => router.push("settings/update")}
         />
         {/* Preferences Section */}
         <View style={{ gap: tokens.spacing.md }}>

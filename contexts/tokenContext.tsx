@@ -17,7 +17,6 @@ export const useToken = () => {
   return context;
 };
 
-// Standalone functions for use outside of components
 export const getStoredToken = async () => {
   try {
     return await AsyncStorage.getItem(TOKEN_KEY);

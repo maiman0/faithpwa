@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (e) {
         hideLoader();
         toast({
-          message: "Secure storage failed. Please check your device settings.",
+          message: "Failed to save session. Please check your browser settings.",
           variant: "error",
         });
         return false;

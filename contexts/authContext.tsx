@@ -2,17 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useToken } from './tokenContext';
 import { useOverlay } from './overlayContext';
 import { login as apiLogin } from './api/auth';
-
-type User = {
-  username: string;
-  name: string;
-  staffId: string;
-  designation: string;
-  avatarText: string;
-};
+import { useStaffStore } from './api/staffStore';
+import { StaffResponse } from './api/staff';
 
 type AuthContextType = {
-  user: User | null;
+  user: Partial<StaffResponse> | null;
   isLoading: boolean;
   signIn: (username: string, password: string) => Promise<boolean>;
   signOut: (force?: boolean) => void;
@@ -26,19 +20,12 @@ export const useAuth = () => {
   return context;
 };
 
-const DUMMY_USER: User = {
-  username: 'user',
-  name: 'Aiman Hakim',
-  staffId: 'CS1024',
-  designation: 'Customer Service Executive',
-  avatarText: 'AH',
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Partial<StaffResponse> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { getToken, saveToken, deleteToken } = useToken();
   const { confirm, toast, showLoader, hideLoader } = useOverlay();
+  const clearStaff = useStaffStore((state) => state.clear);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -46,9 +33,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const token = await getToken();
         if (token) {
-          // In a real app, we would verify the token or fetch the profile here
-          // For now, if we have a token, we'll assume the user is logged in
-          setUser(DUMMY_USER); 
+          // If we have a token, we consider the user authenticated.
+          // Minimal user info to satisfy the UI until useStaff fetches full details.
+          setUser({
+            staff_no: '',
+            first_name: 'User',
+            designation_name: '',
+            initials: 'U',
+          });
         }
       } catch (e) {
         console.error("Failed to load session", e);
@@ -69,12 +61,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await apiLogin({ username, password });
 
       if (response.status === 'success') {
+        clearStaff(); // Clear staff data before new user logs in
+        
         setUser({
-          username,
-          name: 'Staff Member', // The login API doesn't return the name yet
-          staffId: response.staff_id?.toString() || 'N/A',
-          designation: 'Staff',
-          avatarText: username.substring(0, 2).toUpperCase(),
+          staff_id: response.staff_id,
+          first_name: 'Staff',
+          staff_no: '',
+          designation_name: '',
+          initials: 'S',
         });
         
         hideLoader();
@@ -107,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       await deleteToken();
       setUser(null);
+      clearStaff(); // Clear staff data on logout
       hideLoader();
       toast({ 
         message: 'Successfully logged out. See you soon!', 
@@ -120,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: 'error' 
       });
     }
-  }, [deleteToken, toast, showLoader, hideLoader]);
+  }, [deleteToken, toast, showLoader, hideLoader, clearStaff]);
 
   const signOut = useCallback((force = false) => {
     if (force) {

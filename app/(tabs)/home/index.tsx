@@ -13,6 +13,8 @@ import Head from "../../../components/head";
 import SectionHeader from "../../../components/section";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/authContext";
+import { useStaff } from "../../../hooks/useStaff";
+import { useOverlay } from "../../../contexts/overlayContext";
 import AttendanceCard from "../../../components/attendance/attendanceCard";
 import NewsflashCarousel from "../../../components/newsflash/newsflashCarousel";
 import RowTwo from "../../../components/rowtwo";
@@ -22,9 +24,29 @@ export default function Home() {
   const tokens = useDesign();
   const router = useRouter();
   const { user } = useAuth();
+  const { staff, displayName, initials, welcomeMessage } = useStaff();
+  const { toast } = useOverlay();
   const { onScroll } = useTabs();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const toastShown = useRef(false);
+
+  React.useEffect(() => {
+    if (staff && !toastShown.current) {
+      toast({
+        message: welcomeMessage,
+        variant: "success",
+      });
+      toastShown.current = true;
+    }
+  }, [staff, welcomeMessage, toast]);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
@@ -51,10 +73,10 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         <Head
-          greeting="Good Morning"
-          username={user?.name || "User"}
-          designation={user?.designation || ""}
-          avatarText={user?.avatarText || "U"}
+          greeting={getGreeting()}
+          username={displayName || user?.first_name || "User"}
+          designation={staff?.designation_name || user?.designation_name || ""}
+          avatarText={initials || user?.initials || "U"}
           onNotificationPress={() => router.push("home/newsflash")}
         />
         <AttendanceCard />

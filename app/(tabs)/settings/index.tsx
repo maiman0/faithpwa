@@ -25,10 +25,13 @@ import ScrollTop from "../../../components/scrollTop";
 import Tail from "../../../components/tail";
 import { useRouter } from "expo-router";
 
+import { useStaff } from "../../../hooks/useStaff";
+
 export default function Settings() {
   const theme = useTheme();
   const tokens = useDesign();
   const { user } = useAuth();
+  const { staff } = useStaff();
   const { isDark, toggle: toggleTheme } = useAppTheme();
   const { onScroll } = useTabs();
   const { toast, showSheet } = useOverlay();
@@ -239,10 +242,14 @@ export default function Settings() {
         }}
       >
         <Tail
-          username={user?.name}
-          designation={user?.designation}
-          staffId={user?.staffId}
-          avatarText={user?.avatarText}
+          username={staff?.nick_name || staff?.first_name || user?.first_name}
+          fullName={staff?.full_name}
+          designation={staff?.designation_name || user?.designation_name}
+          staffId={staff?.staff_no || user?.staff_no}
+          avatarText={staff?.initials || user?.initials}
+          email={staff?.email}
+          contactNo={staff?.contact_no}
+          fullAddress={staff?.full_address}
           onUpdateProfilePress={() => router.push("settings/update")}
         />
         <Card

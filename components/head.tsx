@@ -41,7 +41,7 @@ export default function Head({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: tokens.spacing.xs,
+            gap: tokens.spacing.xxs,
           }}
         >
           <Text

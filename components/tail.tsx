@@ -17,26 +17,30 @@ export default function Tail({
   username = "Guest User",
   staffId = "N/A",
   designation = "No Designation",
+  email = "N/A",
+  contactNo = "N/A",
+  fullAddress = "N/A",
+  fullName = "N/A",
   onUpdateProfilePress,
-}: TailProps) {
+}: TailProps & { email?: string; contactNo?: string; fullAddress?: string; fullName?: string }) {
   const theme = useTheme();
   const tokens = useDesign();
 
   const details = [
     {
       label: "Full Name",
-      value: "Aiman Hakim Bin Mohd",
+      value: fullName,
       icon: "account-box-outline",
     },
     {
       label: "Email Address",
-      value: "daiman@company.com",
+      value: email,
       icon: "email-outline",
     },
-    { label: "Contact Number", value: "+6012 345 6789", icon: "phone-outline" },
+    { label: "Contact Number", value: contactNo, icon: "phone-outline" },
     {
       label: "Address",
-      value: "Level 25, Menara Faith, Jalan Bukit Bintang, 55100 KL",
+      value: fullAddress,
       icon: "office-building-marker-outline",
     },
   ];

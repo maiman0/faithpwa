@@ -5,6 +5,8 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const config = getDefaultConfig(__dirname);
 
 // Add proxy middleware to the dev server for web
+const BACKEND_TARGET = process.env.BACKEND_URL || 'https://endpoint.daythree.ai/faithMobile/routes';
+
 if (config.server) {
   const originalEnhanceMiddleware = config.server.enhanceMiddleware;
   config.server.enhanceMiddleware = (middleware, server) => {
@@ -16,7 +18,7 @@ if (config.server) {
       // If the request starts with /api, proxy it to the PHP backend
       if (req.url.startsWith('/api')) {
         return createProxyMiddleware({
-          target: 'https://endpoint.daythree.ai/faithMobile/routes',
+          target: BACKEND_TARGET,
           changeOrigin: true,
           timeout: 30000, // Wait 30s for the connection
           proxyTimeout: 30000, // Wait 30s for the response
@@ -28,6 +30,11 @@ if (config.server) {
             proxyRes.headers['Access-Control-Allow-Origin'] = '*';
             proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE';
             proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With';
+          },
+          onError: (err, req, res) => {
+            console.error('[Proxy Error]:', err.message);
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            res.end('Proxy encountered an error connecting to the backend.');
           }
         })(req, res, next);
       }
@@ -41,7 +48,7 @@ if (config.server) {
       return (req, res, next) => {
         if (req.url.startsWith('/api')) {
           return createProxyMiddleware({
-            target: 'https://endpoint.daythree.ai/faithMobile/routes',
+            target: BACKEND_TARGET,
             changeOrigin: true,
             timeout: 30000,
             proxyTimeout: 30000,
@@ -52,6 +59,11 @@ if (config.server) {
               proxyRes.headers['Access-Control-Allow-Origin'] = '*';
               proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE';
               proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With';
+            },
+            onError: (err, req, res) => {
+              console.error('[Proxy Error]:', err.message);
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Proxy encountered an error connecting to the backend.');
             }
           })(req, res, next);
         }

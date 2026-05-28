@@ -18,6 +18,7 @@ import { useOverlay } from "../../../contexts/overlayContext";
 import AttendanceCard from "../../../components/attendance/attendanceCard";
 import NewsflashCarousel from "../../../components/newsflash/newsflashCarousel";
 import RowTwo from "../../../components/rowtwo";
+import { useLeave } from "../../../hooks/useLeave";
 
 export default function Home() {
   const theme = useTheme();
@@ -25,6 +26,7 @@ export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
   const { staff, displayName, initials, welcomeMessage } = useStaff();
+  const { stats, loading: leaveLoading } = useLeave();
   const { toast } = useOverlay();
   const { onScroll } = useTabs();
   const scrollViewRef = useRef<ScrollView | null>(null);
@@ -93,13 +95,13 @@ export default function Home() {
           left={{
             icon: "clock-outline",
             label: "Pending Leave",
-            value: "0",
+            value: stats.pending.toString(),
             color: "#F59E0B",
           }}
           right={{
             icon: "briefcase-outline",
             label: "Annual Balance",
-            value: "0",
+            value: stats.annualBalance.toString(),
             color: "#10B981",
           }}
         />

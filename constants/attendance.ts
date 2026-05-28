@@ -1,5 +1,3 @@
-// constants/attendance.ts
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export type AttendanceStatus = "Present" | "Late" | "Absent" | "Leave" | "Weekend";

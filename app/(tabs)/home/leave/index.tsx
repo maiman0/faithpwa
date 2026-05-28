@@ -21,12 +21,14 @@ import Header from "../../../../components/header";
 import ScrollTop from "../../../../components/scrollTop";
 import RowTwo from "../../../../components/rowtwo";
 import LeaveList from "../../../../components/leave/leaveList";
+import { useLeave } from "../../../../hooks/useLeave";
 
 export default function Leave() {
   const theme = useTheme();
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
   const { toast, showSheet, hideModal } = useOverlay();
+  const { stats } = useLeave();
 
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -126,13 +128,13 @@ export default function Leave() {
           left={{
             icon: "clock-outline",
             label: "Pending Leave",
-            value: "0",
+            value: stats.pending.toString(),
             color: "#F59E0B",
           }}
           right={{
             icon: "briefcase-outline",
             label: "Annual Balance",
-            value: "0",
+            value: stats.annualBalance.toString(),
             color: "#10B981",
           }}
         />

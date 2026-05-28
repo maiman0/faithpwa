@@ -12,20 +12,25 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   const { showSheet, hideSheet, toast, confirm } = useOverlay();
   const { 
     leaves, 
+    balances,
     loading, 
     error, 
     fetchLeaves, 
+    fetchBalances,
     addNewLeave, 
     withdraw, 
     clear 
   } = useLeaveStore();
 
-  // Fetch leaves on mount if list is empty
+  // Fetch data on mount if list is empty
   useEffect(() => {
     if (leaves.length === 0 && !loading && !error) {
       fetchLeaves();
     }
-  }, [leaves.length, loading, error, fetchLeaves]);
+    if (!balances && !loading && !error) {
+      fetchBalances();
+    }
+  }, [leaves.length, balances, loading, error, fetchLeaves, fetchBalances]);
 
   const handleWithdraw = (id: number) => {
     confirm({
@@ -125,17 +130,22 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       pending: leaves.filter(l => l.manager_status === 'Pending').length,
       approved: leaves.filter(l => l.manager_status === 'Approved').length,
       rejected: leaves.filter(l => l.manager_status === 'Rejected').length,
-      total: leaves.length
+      total: leaves.length,
+      // Mapping the flat 'balance' field from the server
+      annualBalance: balances?.balance || 0,
+      medicalBalance: 0, // Profile doesn't return SL yet
     };
-  }, [leaves]);
+  }, [leaves, balances]);
 
   return {
     leaves: filteredLeaves,
     allLeaves: leaves,
+    balances,
     loading,
     error,
     stats,
     refreshLeaves: fetchLeaves,
+    refreshBalances: fetchBalances,
     apply: addNewLeave,
     withdrawLeave: withdraw,
     clearLeaves: clear,

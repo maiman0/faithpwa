@@ -6,12 +6,15 @@ import {
   type Leave, 
   type LeaveResponse 
 } from './leave';
+import { getAllLeaveBalances, type LeaveBalanceItem } from './balance';
 
 type LeaveStore = {
   leaves: Leave[];
+  balances: LeaveBalanceItem | null;
   loading: boolean;
   error: string | null;
   fetchLeaves: () => Promise<void>;
+  fetchBalances: () => Promise<void>;
   addNewLeave: (formData: FormData) => Promise<LeaveResponse>;
   withdraw: (id: number) => Promise<{ success: boolean; error?: string }>;
   clear: () => void;
@@ -19,6 +22,7 @@ type LeaveStore = {
 
 export const useLeaveStore = create<LeaveStore>((set, get) => ({
   leaves: [],
+  balances: null,
   loading: false,
   error: null,
 
@@ -34,11 +38,25 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     }
   },
 
+  fetchBalances: async () => {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); // Gets YYYY-MM
+      const data = await getAllLeaveBalances(currentMonth);
+      if ('error' in data) {
+        set({ error: data.error });
+      } else {
+        set({ balances: data, error: null });
+      }
+    } catch (e: any) {
+      set({ error: e.message });
+    }
+  },
+
   addNewLeave: async (formData) => {
     try {
       const res = await applyLeave(formData);
       if (res.status === 'success') {
-        await get().fetchLeaves();
+        await Promise.all([get().fetchLeaves(), get().fetchBalances()]);
       }
       return res;
     } catch (e: any) {
@@ -55,6 +73,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             l.leave_id === id ? { ...l, manager_status: 'Withdraw' } : l,
           ),
         }));
+        await get().fetchBalances(); // Refresh balances on withdraw
         return { success: true };
       }
       return { success: false, error: res.message };
@@ -63,5 +82,5 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     }
   },
 
-  clear: () => set({ leaves: [], loading: false, error: null }),
+  clear: () => set({ leaves: [], balances: null, loading: false, error: null }),
 }));

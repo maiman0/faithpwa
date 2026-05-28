@@ -18,6 +18,8 @@ if (config.server) {
         return createProxyMiddleware({
           target: 'https://endpoint.daythree.ai/faithMobile/routes',
           changeOrigin: true,
+          timeout: 30000, // Wait 30s for the connection
+          proxyTimeout: 30000, // Wait 30s for the response
           pathRewrite: {
             '^/api': '', // Remove '/api' from the path before sending to server
           },
@@ -41,6 +43,8 @@ if (config.server) {
           return createProxyMiddleware({
             target: 'https://endpoint.daythree.ai/faithMobile/routes',
             changeOrigin: true,
+            timeout: 30000,
+            proxyTimeout: 30000,
             pathRewrite: {
               '^/api': '',
             },

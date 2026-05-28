@@ -10,8 +10,8 @@ import { Room } from "../../contexts/api/room";
 export default function RoomList() {
   const theme = useTheme();
   const tokens = useDesign();
-  const { showSheet, toast } = useOverlay();
-  const { rooms, loading, refreshRooms, getAvailability } = useRoom();
+  const { showSheet, toast, showLoader, hideLoader } = useOverlay();
+  const { rooms, loading, refreshRooms, getAvailability, selectedDate } = useRoom();
 
   const [selectedTower, setSelectedTower] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
@@ -48,26 +48,56 @@ export default function RoomList() {
   }, [selectedTower, selectedLevel, rooms]);
 
   const handleBooking = async (room: Room) => {
-    toast(`Fetching availability for ${room.Room_Name}...`);
+    showLoader(`Checking availability for ${room.Room_Name}...`);
     
-    // For now, using a fixed date for availability check (can be expanded to use a date picker)
-    const today = new Date().toISOString().split('T')[0];
-    const res = await getAvailability(room.room_id, today);
+    const res = await getAvailability(room.room_id, selectedDate);
+    hideLoader();
 
     if ('error' in res) {
       toast(res.error);
       return;
     }
 
-    const timeSlots = Object.entries(res.availability).map(([time, data]) => ({
-      label: time,
-      isAvailable: data.status === 'Available',
-      pic: data.PIC,
-      eventName: data.event_name
-    }));
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const isToday = selectedDate === today;
+
+    const timeSlots = Object.entries(res.availability)
+      .map(([time, data]) => {
+        let isPast = false;
+        
+        if (isToday) {
+          // Parse time string like "09:00 AM" or "09:00"
+          const [timePart, ampm] = time.split(' ');
+          let [hours, minutes] = timePart.split(':').map(Number);
+          
+          if (ampm === 'PM' && hours < 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+          
+          const slotTime = new Date();
+          slotTime.setHours(hours, minutes, 0, 0);
+          
+          if (now >= slotTime) {
+            isPast = true;
+          }
+        }
+
+        return {
+          label: time,
+          isAvailable: data.status === 'Available',
+          pic: data.PIC,
+          eventName: data.event_name,
+          isPast
+        };
+      })
+      .filter(slot => !slot.isPast);
+
+    if (timeSlots.length === 0) {
+      toast("No more available slots for today.");
+      return;
+    }
 
     showSheet({
-      title: "Select Time Slot",
       content: (
         <View style={{ gap: tokens.spacing.lg }}>
           <View style={{ gap: 2 }}>
@@ -86,7 +116,6 @@ export default function RoomList() {
                 disabled={!slot.isAvailable}
                 onPress={() => {
                   toast(`Slot ${slot.label} selected for ${room.Room_Name}`);
-                  // Here you would navigate to a booking confirmation or open another sheet
                 }}
                 style={{
                   width: "31%",

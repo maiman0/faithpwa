@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -10,16 +10,19 @@ import { useRoom } from "../../hooks/useRoom";
 export default function RoomBento() {
   const theme = useTheme();
   const { showModal, hideModal, toast } = useOverlay();
-  const { stats } = useRoom();
+  const { stats, selectedDate, setSelectedDate } = useRoom();
   const { spacing, radii } = design;
 
-  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }));
-  const [dateValue, setDateValue] = useState(new Date());
+  // Convert YYYY-MM-DD from store to display format
+  const dateValue = useMemo(() => new Date(selectedDate), [selectedDate]);
+  const formattedDate = useMemo(() => {
+    return dateValue.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }, [dateValue]);
 
   const handleDatePicker = () => {
     showModal({
@@ -30,14 +33,25 @@ export default function RoomBento() {
           subtitle="Select date to check availability"
           value={dateValue}
           onChange={(date) => {
-            setDateValue(date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (date < today) {
+              toast("Cannot select past date");
+              return;
+            }
+
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            setSelectedDate(`${yyyy}-${mm}-${dd}`);
+            
             const formatted = date.toLocaleDateString("en-GB", {
               weekday: "short",
               day: "numeric",
               month: "short",
               year: "numeric",
             });
-            setSelectedDate(formatted);
             toast(`Date changed to ${formatted}`);
           }}
           onConfirm={hideModal}
@@ -46,7 +60,7 @@ export default function RoomBento() {
     });
   };
 
-  const [weekday, dayMonth, year] = selectedDate.replace(",", "").split(" ");
+  const [weekday, dayMonth, year] = formattedDate.replace(",", "").split(" ");
 
   return (
     <View style={{ gap: spacing.md }}>

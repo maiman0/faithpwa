@@ -14,11 +14,13 @@ import {
 interface RoomState {
   rooms: Room[];
   myBookings: BookingItem[];
+  selectedDate: string;
   loading: boolean;
   error: string | null;
 
   fetchRooms: () => Promise<void>;
   fetchBookings: () => Promise<void>;
+  setSelectedDate: (date: string) => void;
   createBooking: (
     bookDate: string,
     startTime: string,
@@ -38,6 +40,7 @@ interface RoomState {
 export const useRoomStore = create<RoomState>((set, get) => ({
   rooms: [],
   myBookings: [],
+  selectedDate: new Date().toISOString().split('T')[0],
   loading: false,
   error: null,
 
@@ -60,6 +63,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       set({ myBookings: res, loading: false });
     }
   },
+
+  setSelectedDate: (date: string) => set({ selectedDate: date }),
 
   createBooking: async (bookDate, startTime, endTime, room, tower, level, purpose, PIC, email) => {
     set({ loading: true, error: null });

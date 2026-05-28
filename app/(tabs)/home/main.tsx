@@ -209,7 +209,6 @@ export default function Main() {
 
   const handleSheet = () => {
     showSheet({
-      title: "Item Details",
       content: (
         <View style={{ gap: tokens.spacing.lg }}>
           <Text variant="bodyLarge" style={{ lineHeight: 24 }}>

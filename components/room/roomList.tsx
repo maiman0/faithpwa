@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { View, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
+import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Card, Text, Chip, Button, Avatar, useTheme, Divider } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../../contexts/designContext";
 import { useRoom } from "../../hooks/useRoom";
 import { useOverlay } from "../../contexts/overlayContext";

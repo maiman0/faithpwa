@@ -20,6 +20,9 @@ import Header from "../../../../components/header";
 import { useLeave } from "../../../../hooks/useLeave";
 import { useRouter } from "expo-router";
 import PickerModal from "../../../../components/pickerModal";
+import DocumentModal from "../../../../components/documentModal";
+import { useUpload } from "../../../../hooks/useUpload";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const LEAVE_TYPES = [
   { id: "AL", label: "Annual Leave", icon: "calendar-star" },
@@ -39,8 +42,9 @@ export default function ApplyLeave() {
   const tokens = useDesign();
   const router = useRouter();
   const { setHideTabBar } = useTabs();
-  const { toast, showLoader, hideLoader, showModal, hideModal } = useOverlay();
+  const { toast, showLoader, hideLoader, showModal, hideModal, showSheet, hideSheet } = useOverlay();
   const { apply } = useLeave();
+  const { attachedDocument, pickFromCamera, pickFromGallery, pickFromFiles, setAttachedDocument, error, setError } = useUpload();
 
   const [reason, setReason] = useState("");
   const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0]);
@@ -50,6 +54,13 @@ export default function ApplyLeave() {
     setHideTabBar(true);
     return () => setHideTabBar(false);
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      toast({ message: error, variant: "error" });
+      setError(null);
+    }
+  }, [error]);
 
   const handleSelectLeaveType = () => {
     showModal({
@@ -84,6 +95,27 @@ export default function ApplyLeave() {
           keyExtractor={(item) => item.id}
           labelExtractor={(item) => item.label}
           iconExtractor={(item) => item.icon as any}
+        />
+      ),
+    });
+  };
+
+  const handleAttachDocument = () => {
+    showSheet({
+      content: (
+        <DocumentModal
+          onPickCamera={async () => {
+            hideSheet();
+            await pickFromCamera();
+          }}
+          onPickGallery={async () => {
+            hideSheet();
+            await pickFromGallery();
+          }}
+          onPickFile={async () => {
+            hideSheet();
+            await pickFromFiles();
+          }}
         />
       ),
     });
@@ -167,6 +199,80 @@ export default function ApplyLeave() {
                 numberOfLines={4}
                 outlineStyle={{ borderRadius: tokens.radii.lg }}
               />
+            </View>
+
+            <View style={{ gap: tokens.spacing.md }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text variant="titleMedium" style={{ fontWeight: "700" }}>Attachment</Text>
+                {attachedDocument && (
+                   <Button 
+                    mode="text" 
+                    onPress={() => setAttachedDocument(null)}
+                    textColor={theme.colors.error}
+                    compact
+                  >
+                    Remove
+                  </Button>
+                )}
+              </View>
+
+              {!attachedDocument ? (
+                <Pressable onPress={handleAttachDocument}>
+                  <View style={{
+                    borderWidth: 1,
+                    borderColor: theme.colors.outline + '40',
+                    borderStyle: 'dashed',
+                    borderRadius: tokens.radii.lg,
+                    padding: tokens.spacing.xl,
+                    alignItems: 'center',
+                    gap: 8,
+                    backgroundColor: theme.colors.surfaceVariant + '20'
+                  }}>
+                    <MaterialCommunityIcons name="cloud-upload-outline" size={32} color={theme.colors.primary} />
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600' }}>
+                      Upload MC or Supporting Doc
+                    </Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, opacity: 0.6 }}>
+                      JPG, PNG or PDF (Max 1MB)
+                    </Text>
+                  </View>
+                </Pressable>
+              ) : (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 16,
+                  borderRadius: tokens.radii.lg,
+                  backgroundColor: theme.colors.primaryContainer + '40',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary + '20'
+                }}>
+                  <View style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 10,
+                    backgroundColor: theme.colors.primary,
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <MaterialCommunityIcons 
+                      name={attachedDocument.type.includes('pdf') ? 'file-pdf-box' : 'image'} 
+                      size={24} 
+                      color={theme.colors.onPrimary} 
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyMedium" numberOfLines={1} style={{ fontWeight: '700' }}>
+                      {attachedDocument.name}
+                    </Text>
+                    <Text variant="bodySmall" style={{ opacity: 0.6 }}>
+                      {attachedDocument.type.split('/')[1].toUpperCase()} • Ready to upload
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+                </View>
+              )}
             </View>
 
             <Divider />

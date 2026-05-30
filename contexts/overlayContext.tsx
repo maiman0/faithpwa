@@ -59,9 +59,11 @@ type OverlayContextType = {
   // Modal
   showModal: (options: ModalOptions) => void;
   hideModal: () => void;
+  modalVisible: boolean;
   // Sheet
   showSheet: (options: SheetOptions) => void;
   hideSheet: () => void;
+  sheetVisible: boolean;
   // Loader
   showLoader: (message?: string) => void;
   hideLoader: () => void;
@@ -208,8 +210,10 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         toast,
         showModal,
         hideModal,
+        modalVisible,
         showSheet,
         hideSheet,
+        sheetVisible,
         showLoader,
         hideLoader,
         isLoading,

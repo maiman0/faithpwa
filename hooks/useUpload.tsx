@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -23,8 +24,10 @@ export function useUpload() {
     uri: string;
     name: string;
     type: string;
+    refNo?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [documentRefNo, setDocumentRefNo] = useState<string>('');
 
   const generateUniqueFileName = (prefix: string, originalName: string, mime?: string) => {
     const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -35,32 +38,15 @@ export function useUpload() {
   };
 
   const convertToFileUri = async (contentUri: string) => {
+    if (Platform.OS === 'web') return contentUri;
     // Always copy to our cache dir with a safe name
-    const target = FileSystem.cacheDirectory + `DOC_${Date.now()}.bin`;
+    const target = (FileSystem.cacheDirectory || '') + `DOC_${Date.now()}.bin`;
     try {
       await FileSystem.copyAsync({ from: contentUri, to: target });
       return target;
     } catch {
       return null;
     }
-  };
-
-  const validateAndSet = async (uri: string, nameHint: string, mime: string) => {
-    setError(null);
-    // 1) MIME whitelist
-    if (!ALLOWED[mime]) {
-      setError("Unsupported file type. Please upload a JPG, PNG or PDF.");
-      return;
-    }
-    // 2) Size check
-    const info = await FileSystem.getInfoAsync(uri);
-    if (!info.exists || (typeof info.size === 'number' && info.size > MAX_BYTES)) {
-      setError("File is too large. Maximum size is 1MB.");
-      return;
-    }
-    // 3) Final file name
-    const safeName = generateUniqueFileName('ATT', sanitize(nameHint), mime);
-    setAttachedDocument({ uri, name: safeName, type: mime });
   };
 
   const ensurePermission = async (requestFn: () => Promise<ImagePicker.PermissionResponse>) => {
@@ -73,7 +59,7 @@ export function useUpload() {
 
   const pickFromGallery = async () => {
     const granted = await ensurePermission(ImagePicker.requestMediaLibraryPermissionsAsync);
-    if (!granted) return;
+    if (!granted) return null;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -86,14 +72,18 @@ export function useUpload() {
       const fileUri = await convertToFileUri(asset.uri);
       if (fileUri) {
         const mime = asset.mimeType || 'image/jpeg';
-        await validateAndSet(fileUri, asset.fileName || asset.uri, mime);
+        const safeName = generateUniqueFileName('ATT', sanitize(asset.fileName || asset.uri), mime);
+        const doc = { uri: fileUri, name: safeName, type: mime };
+        setAttachedDocument(doc);
+        return doc;
       }
     }
+    return null;
   };
 
   const pickFromCamera = async () => {
     const granted = await ensurePermission(ImagePicker.requestCameraPermissionsAsync);
-    if (!granted) return;
+    if (!granted) return null;
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -106,36 +96,67 @@ export function useUpload() {
       const fileUri = await convertToFileUri(asset.uri);
       if (fileUri) {
         const mime = asset.mimeType || 'image/jpeg';
-        await validateAndSet(fileUri, asset.fileName || asset.uri, mime);
+        const safeName = generateUniqueFileName('ATT', sanitize(asset.fileName || asset.uri), mime);
+        const doc = { uri: fileUri, name: safeName, type: mime };
+        setAttachedDocument(doc);
+        return doc;
       }
     }
+    return null;
   };
 
-  const pickFromFiles = async () => {
+  const pick = async () => {
     setError(null);
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'], // restrict types
-      copyToCacheDirectory: true,
-      multiple: false,
-    });
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
 
-    if (result.canceled || !result.assets.length) return;
+      if (result.canceled || !result.assets.length) return null;
 
-    const file = result.assets[0];
-    const fileUri = await convertToFileUri(file.uri);
-    if (fileUri) {
-      const mime = file.mimeType || 'application/octet-stream';
-      await validateAndSet(fileUri, file.name || file.uri, mime);
+      const file = result.assets[0];
+      const fileUri = await convertToFileUri(file.uri);
+      if (fileUri) {
+        const mime = file.mimeType || 'application/octet-stream';
+        
+        // Validation logic
+        if (!ALLOWED[mime]) {
+          setError("Unsupported file type. Please upload a JPG, PNG or PDF.");
+          return null;
+        }
+        let fileSize = file.size;
+        if (fileSize === undefined && Platform.OS !== 'web') {
+          const info = await FileSystem.getInfoAsync(fileUri);
+          if (info.exists && typeof info.size === 'number') fileSize = info.size;
+        }
+        if (fileSize !== undefined && fileSize > MAX_BYTES) {
+          setError("File is too large. Maximum size is 1MB.");
+          return null;
+        }
+
+        const safeName = generateUniqueFileName('ATT', sanitize(file.name || file.uri), mime);
+        const doc = { uri: fileUri, name: safeName, type: mime };
+        setAttachedDocument(doc);
+        return doc;
+      }
+    } catch (err) {
+      setError("Failed to pick document");
+      console.error(err);
     }
+    return null;
   };
 
   return {
     attachedDocument,
     setAttachedDocument,
+    documentRefNo,
+    setDocumentRefNo,
     error,
     setError,
+    pick,
     pickFromGallery,
     pickFromCamera,
-    pickFromFiles,
   };
 }

@@ -1,59 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Pressable } from "react-native";
-import { Text, useTheme, Divider } from "react-native-paper";
+import { Text, useTheme, TextInput, Button, IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
-
-type DocumentOption = {
-  id: string;
-  label: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  description: string;
-  onPress: () => void;
-};
+import { useUpload } from "../hooks/useUpload";
 
 type DocumentModalProps = {
   title?: string;
-  onPickCamera: () => void;
-  onPickGallery: () => void;
-  onPickFile: () => void;
+  refNo: string;
+  onRefNoChange: (ref: string) => void;
+  attachedFile: { name: string; type: string };
+  onPick: () => Promise<void>;
+  onConfirm: () => void;
+  onCancel: () => void;
 };
 
 export default function DocumentModal({
-  title = "Attach Document",
-  onPickCamera,
-  onPickGallery,
-  onPickFile,
+  title = "Document Reference",
+  refNo,
+  onRefNoChange,
+  attachedFile,
+  onPick,
+  onConfirm,
+  onCancel,
 }: DocumentModalProps) {
   const { colors } = useTheme();
   const tokens = useDesign();
 
-  const options: DocumentOption[] = [
-    {
-      id: "camera",
-      label: "Take Photo",
-      icon: "camera-outline",
-      description: "Use your camera to snap a document",
-      onPress: onPickCamera,
-    },
-    {
-      id: "gallery",
-      label: "Photo Library",
-      icon: "image-outline",
-      description: "Choose from your saved photos",
-      onPress: onPickGallery,
-    },
-    {
-      id: "file",
-      label: "Browse Files",
-      icon: "file-document-outline",
-      description: "Select a PDF or document file",
-      onPress: onPickFile,
-    },
-  ];
-
   return (
-    <View style={{ gap: tokens.spacing.lg }}>
+    <View style={{ gap: tokens.spacing.lg, paddingBottom: tokens.spacing.md }}>
       <View style={{ alignItems: "center", gap: 4 }}>
         <Text variant="titleMedium" style={{ fontWeight: "700" }}>
           {title}
@@ -62,63 +37,64 @@ export default function DocumentModal({
           variant="bodySmall"
           style={{ color: colors.onSurfaceVariant, textAlign: "center" }}
         >
-          Select a source to upload your supporting document
+          Enter the reference number for the selected document
         </Text>
       </View>
 
-      <View style={{ gap: tokens.spacing.sm }}>
-        {options.map((option, index) => (
-          <React.Fragment key={option.id}>
-            <Pressable
-              onPress={option.onPress}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: tokens.spacing.lg,
-                padding: tokens.spacing.md,
-                borderRadius: tokens.radii["2xl"],
-                backgroundColor: pressed
-                  ? colors.surfaceVariant
-                  : colors.surfaceVariant + '40',
-              })}
-            >
-              <View
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 18,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: colors.primaryContainer,
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={option.icon}
-                  size={26}
-                  color={colors.primary}
-                />
-              </View>
+      <View style={{ gap: tokens.spacing.md }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          padding: 12,
+          borderRadius: tokens.radii.lg,
+          backgroundColor: colors.primaryContainer + '40',
+          borderWidth: 1,
+          borderColor: colors.primary + '20'
+        }}>
+          <MaterialCommunityIcons 
+            name={attachedFile.type.includes('pdf') ? 'file-pdf-box' : 'image'} 
+            size={24} 
+            color={colors.primary} 
+          />
+          <View style={{ flex: 1 }}>
+            <Text variant="bodyMedium" numberOfLines={1} style={{ fontWeight: '600' }}>
+              {attachedFile.name}
+            </Text>
+          </View>
+          <Button mode="text" onPress={onPick} compact textColor={colors.primary}>
+            Change
+          </Button>
+        </View>
 
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text variant="titleSmall" style={{ fontWeight: "700" }}>
-                  {option.label}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: colors.onSurfaceVariant, opacity: 0.8 }}
-                >
-                  {option.description}
-                </Text>
-              </View>
+        <TextInput
+          mode="outlined"
+          label="Reference Number"
+          placeholder="e.g. MC123456"
+          value={refNo}
+          onChangeText={onRefNoChange}
+          autoFocus
+          outlineStyle={{ borderRadius: tokens.radii.lg }}
+          left={<TextInput.Icon icon="pound" />}
+        />
+      </View>
 
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={20}
-                color={colors.outline}
-              />
-            </Pressable>
-          </React.Fragment>
-        ))}
+      <View style={{ flexDirection: 'row', gap: tokens.spacing.md, marginTop: tokens.spacing.sm }}>
+        <Button 
+          mode="outlined" 
+          onPress={onCancel} 
+          style={{ flex: 1, borderRadius: tokens.radii.pill }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          mode="contained" 
+          onPress={onConfirm} 
+          disabled={!refNo.trim()}
+          style={{ flex: 1, borderRadius: tokens.radii.pill }}
+        >
+          Confirm
+        </Button>
       </View>
     </View>
   );

@@ -42,9 +42,17 @@ export default function ApplyLeave() {
   const tokens = useDesign();
   const router = useRouter();
   const { setHideTabBar } = useTabs();
-  const { toast, showLoader, hideLoader, showModal, hideModal, showSheet, hideSheet } = useOverlay();
+  const { toast, showLoader, hideLoader, showModal, hideModal, modalVisible } = useOverlay();
   const { apply } = useLeave();
-  const { attachedDocument, pickFromCamera, pickFromGallery, pickFromFiles, setAttachedDocument, error, setError } = useUpload();
+  const { 
+    attachedDocument, 
+    setAttachedDocument, 
+    documentRefNo,
+    setDocumentRefNo,
+    pick,
+    error,
+    setError
+  } = useUpload();
 
   const [reason, setReason] = useState("");
   const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0]);
@@ -100,26 +108,40 @@ export default function ApplyLeave() {
     });
   };
 
-  const handleAttachDocument = () => {
-    showSheet({
+  const handleAttachDocument = async () => {
+    const doc = await pick();
+    if (doc) {
+      showRefModal(doc);
+    }
+  };
+
+  const showRefModal = (doc: { name: string; type: string }) => {
+    showModal({
       content: (
         <DocumentModal
-          onPickCamera={async () => {
-            hideSheet();
-            await pickFromCamera();
+          attachedFile={doc}
+          refNo={documentRefNo}
+          onRefNoChange={setDocumentRefNo}
+          onPick={async () => {
+            const nextDoc = await pick();
+            if (nextDoc) showRefModal(nextDoc);
           }}
-          onPickGallery={async () => {
-            hideSheet();
-            await pickFromGallery();
-          }}
-          onPickFile={async () => {
-            hideSheet();
-            await pickFromFiles();
+          onConfirm={() => hideModal()}
+          onCancel={() => {
+            setAttachedDocument(null);
+            hideModal();
           }}
         />
       ),
     });
   };
+
+  // Re-render modal content when document state or refNo changes to keep UI synced
+  useEffect(() => {
+    if (modalVisible && attachedDocument) {
+      showRefModal(attachedDocument);
+    }
+  }, [documentRefNo]);
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
@@ -128,15 +150,44 @@ export default function ApplyLeave() {
     }
 
     showLoader("Submitting application...");
-    // Mocking a short delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    hideLoader();
-    toast({
-      message: "Leave application submitted successfully!",
-      variant: "success",
-    });
-    router.back();
+    try {
+      const formData = new FormData();
+      formData.append('leave_type', leaveType.id);
+      formData.append('leave_period', leavePeriod.id);
+      formData.append('reason', reason);
+      formData.append('document_ref_no', documentRefNo);
+      
+      if (attachedDocument) {
+        // @ts-ignore
+        formData.append('document', {
+          uri: attachedDocument.uri,
+          name: attachedDocument.name,
+          type: attachedDocument.type,
+        } as any);
+      }
+
+      const res = await apply(formData);
+      if (res.status === 'success') {
+        toast({
+          message: "Leave application submitted successfully!",
+          variant: "success",
+        });
+        router.back();
+      } else {
+        toast({
+          message: res.message || "Failed to submit application",
+          variant: "error",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        message: err.message || "An unexpected error occurred",
+        variant: "error",
+      });
+    } finally {
+      hideLoader();
+    }
   };
 
   return (

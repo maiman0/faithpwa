@@ -22,9 +22,10 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     withdraw, 
     clear 
   } = useLeaveStore();
-  const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0]);
-  const [leavePeriod, setLeavePeriod] = useState(LEAVE_PERIODS[0]);
-  const [selectedReason, setSelectedReason] = useState(LEAVE_REASONS[0]);
+  
+  const [leaveType, setLeaveType] = useState<(typeof LEAVE_TYPES)[0] | null>(null);
+  const [leavePeriod, setLeavePeriod] = useState<(typeof LEAVE_PERIODS)[0] | null>(null);
+  const [selectedReason, setSelectedReason] = useState<(typeof LEAVE_REASONS)[0] | null>(null);
 
   const selectLeaveType = () => {
     showModal({

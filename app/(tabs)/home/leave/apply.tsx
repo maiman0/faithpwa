@@ -6,13 +6,7 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import {
-  Text,
-  Button,
-  TextInput,
-  useTheme,
-  Divider,
-} from "react-native-paper";
+import { Text, Button, TextInput, useTheme, Divider } from "react-native-paper";
 import { useDesign } from "../../../../contexts/designContext";
 import { useTabs } from "../../../../contexts/tabContext";
 import { useOverlay } from "../../../../contexts/overlayContext";
@@ -29,30 +23,34 @@ export default function ApplyLeave() {
   const tokens = useDesign();
   const router = useRouter();
   const { setHideTabBar } = useTabs();
-  const { toast, showLoader, hideLoader, showModal, hideModal, modalVisible } = useOverlay();
-  const { 
+  const { toast, showLoader, hideLoader, showModal, hideModal, modalVisible } =
+    useOverlay();
+  const {
     apply,
     leaveType,
     selectLeaveType,
     leavePeriod,
     selectLeavePeriod,
     selectedReason,
-    selectReason
+    selectReason,
   } = useLeave();
-  
-  const { 
-    attachedDocument, 
-    setAttachedDocument, 
+
+  const {
+    attachedDocument,
+    setAttachedDocument,
     documentRefNo,
     setDocumentRefNo,
     pick,
     error,
-    setError
+    setError,
   } = useUpload();
 
   const [remarks, setRemarks] = useState("");
-  
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+
+  const [dateRange, setDateRange] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
     start: null,
     end: null,
   });
@@ -105,8 +103,18 @@ export default function ApplyLeave() {
   }, [documentRefNo]);
 
   const handleSubmit = async () => {
-    if (!dateRange.start || !dateRange.end) {
-      toast("Please select a date range.");
+    if (!leaveType) {
+      toast("Please select a leave type.");
+      return;
+    }
+    if (!leavePeriod) {
+      toast("Please select a leave period.");
+      return;
+    }
+
+    const isFullDay = leavePeriod.id === "full";
+    if (!dateRange.start || (isFullDay && !dateRange.end)) {
+      toast(isFullDay ? "Please select a date range." : "Please select a date.");
       return;
     }
 
@@ -116,25 +124,32 @@ export default function ApplyLeave() {
     }
 
     showLoader("Submitting application...");
-    
+
     try {
       const formData = new FormData();
-      formData.append('leave_type', leaveType.id);
-      formData.append('leave_period', leavePeriod.id);
-      formData.append('reason', selectedReason.label);
-      formData.append('remarks', remarks);
-      formData.append('document_ref_no', documentRefNo);
-      
+      formData.append("leave_type", leaveType.id);
+      formData.append("leave_period", leavePeriod.id);
+      formData.append("reason", selectedReason.label);
+      formData.append("remarks", remarks);
+      formData.append("document_ref_no", documentRefNo);
+
       if (dateRange.start) {
-        formData.append('start_date', dateRange.start.toISOString().split('T')[0]);
+        formData.append(
+          "start_date",
+          dateRange.start.toISOString().split("T")[0],
+        );
       }
-      if (dateRange.end) {
-        formData.append('end_date', dateRange.end.toISOString().split('T')[0]);
+      
+      // If single mode (half day), end_date = start_date for API consistency
+      if (!isFullDay && dateRange.start) {
+        formData.append("end_date", dateRange.start.toISOString().split("T")[0]);
+      } else if (dateRange.end) {
+        formData.append("end_date", dateRange.end.toISOString().split("T")[0]);
       }
 
       if (attachedDocument) {
         // @ts-ignore
-        formData.append('document', {
+        formData.append("document", {
           uri: attachedDocument.uri,
           name: attachedDocument.name,
           type: attachedDocument.type,
@@ -142,7 +157,7 @@ export default function ApplyLeave() {
       }
 
       const res = await apply(formData);
-      if (res.status === 'success') {
+      if (res.status === "success") {
         toast({
           message: "Leave application submitted successfully!",
           variant: "success",
@@ -184,33 +199,15 @@ export default function ApplyLeave() {
             showBack
           />
 
-          <View style={{ gap: tokens.spacing.lg }}>
+          <View style={{ gap: tokens.spacing.md }}>
             <View style={{ gap: tokens.spacing.md }}>
-              <Text variant="titleMedium" style={{ fontWeight: "700" }}>Leave Details</Text>
-              
-              <Pressable onPress={() => setIsDatePickerVisible(true)}>
-                <View pointerEvents="none">
-                  <TextInput
-                    mode="outlined"
-                    label="Leave Dates"
-                    value={
-                      dateRange.start && dateRange.end
-                        ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
-                        : "Select dates"
-                    }
-                    editable={false}
-                    left={<TextInput.Icon icon="calendar" />}
-                    outlineStyle={{ borderRadius: tokens.radii.lg }}
-                  />
-                </View>
-              </Pressable>
-
               <Pressable onPress={selectLeaveType}>
                 <View pointerEvents="none">
                   <TextInput
                     mode="outlined"
                     label="Leave Type"
-                    value={leaveType.label}
+                    value={leaveType?.label || ""}
+                    placeholder="Select leave type"
                     editable={false}
                     outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
@@ -222,8 +219,35 @@ export default function ApplyLeave() {
                   <TextInput
                     mode="outlined"
                     label="Leave Period"
-                    value={leavePeriod.label}
+                    value={leavePeriod?.label || ""}
+                    placeholder="Select period (Full/Half Day)"
                     editable={false}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
+                  />
+                </View>
+              </Pressable>
+
+              <Pressable onPress={() => {
+                if (!leavePeriod) {
+                  toast("Please select a leave period first.");
+                  return;
+                }
+                setIsDatePickerVisible(true);
+              }}>
+                <View pointerEvents="none">
+                  <TextInput
+                    mode="outlined"
+                    label="Leave Dates"
+                    disabled={!leavePeriod}
+                    value={
+                      dateRange.start 
+                        ? (leavePeriod?.id === 'full' && dateRange.end)
+                          ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
+                          : dateRange.start.toLocaleDateString()
+                        : "Select dates"
+                    }
+                    editable={false}
+                    left={<TextInput.Icon icon="calendar" />}
                     outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
                 </View>
@@ -234,7 +258,8 @@ export default function ApplyLeave() {
                   <TextInput
                     mode="outlined"
                     label="Reason"
-                    value={selectedReason.label}
+                    value={selectedReason?.label || ""}
+                    placeholder="Select a reason"
                     editable={false}
                     outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
@@ -254,11 +279,19 @@ export default function ApplyLeave() {
             </View>
 
             <View style={{ gap: tokens.spacing.md }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text variant="titleMedium" style={{ fontWeight: "700" }}>Attachment</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                  Attachment
+                </Text>
                 {attachedDocument && (
-                   <Button 
-                    mode="text" 
+                  <Button
+                    mode="text"
                     onPress={() => setAttachedDocument(null)}
                     textColor={theme.colors.error}
                     compact
@@ -270,59 +303,94 @@ export default function ApplyLeave() {
 
               {!attachedDocument ? (
                 <Pressable onPress={handleAttachDocument}>
-                  <View style={{
-                    borderWidth: 1,
-                    borderColor: theme.colors.outline + '40',
-                    borderStyle: 'dashed',
-                    borderRadius: tokens.radii.lg,
-                    padding: tokens.spacing.xl,
-                    alignItems: 'center',
-                    gap: 8,
-                    backgroundColor: theme.colors.surfaceVariant + '20'
-                  }}>
-                    <MaterialCommunityIcons name="cloud-upload-outline" size={32} color={theme.colors.primary} />
-                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: '600' }}>
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: theme.colors.outline + "40",
+                      borderStyle: "dashed",
+                      borderRadius: tokens.radii.lg,
+                      padding: tokens.spacing.xl,
+                      alignItems: "center",
+                      gap: 8,
+                      backgroundColor: theme.colors.surfaceVariant + "20",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="cloud-upload-outline"
+                      size={32}
+                      color={theme.colors.primary}
+                    />
+                    <Text
+                      variant="bodyMedium"
+                      style={{
+                        color: theme.colors.onSurfaceVariant,
+                        fontWeight: "600",
+                      }}
+                    >
                       Upload MC or Supporting Doc
                     </Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, opacity: 0.6 }}>
+                    <Text
+                      variant="bodySmall"
+                      style={{
+                        color: theme.colors.onSurfaceVariant,
+                        opacity: 0.6,
+                      }}
+                    >
                       JPG, PNG or PDF (Max 1MB)
                     </Text>
                   </View>
                 </Pressable>
               ) : (
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: 16,
-                  borderRadius: tokens.radii.lg,
-                  backgroundColor: theme.colors.primaryContainer + '40',
-                  borderWidth: 1,
-                  borderColor: theme.colors.primary + '20'
-                }}>
-                  <View style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 10,
-                    backgroundColor: theme.colors.primary,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <MaterialCommunityIcons 
-                      name={attachedDocument.type.includes('pdf') ? 'file-pdf-box' : 'image'} 
-                      size={24} 
-                      color={theme.colors.onPrimary} 
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 16,
+                    borderRadius: tokens.radii.lg,
+                    backgroundColor: theme.colors.primaryContainer + "40",
+                    borderWidth: 1,
+                    borderColor: theme.colors.primary + "20",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 10,
+                      backgroundColor: theme.colors.primary,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name={
+                        attachedDocument.type.includes("pdf")
+                          ? "file-pdf-box"
+                          : "image"
+                      }
+                      size={24}
+                      color={theme.colors.onPrimary}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text variant="bodyMedium" numberOfLines={1} style={{ fontWeight: '700' }}>
+                    <Text
+                      variant="bodyMedium"
+                      numberOfLines={1}
+                      style={{ fontWeight: "700" }}
+                    >
                       {attachedDocument.name}
                     </Text>
                     <Text variant="bodySmall" style={{ opacity: 0.6 }}>
-                      {attachedDocument.type.split('/')[1].toUpperCase()} • Ready to upload
+                      {attachedDocument.type.split("/")[1].toUpperCase()} •
+                      Ready to upload
                     </Text>
                   </View>
-                  <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+                  <MaterialCommunityIcons
+                    name="check-circle"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                 </View>
               )}
             </View>
@@ -340,8 +408,11 @@ export default function ApplyLeave() {
             >
               Submit Application
             </Button>
-            
-            <Text variant="bodySmall" style={{ textAlign: 'center', opacity: 0.6, fontStyle: 'italic' }}>
+
+            <Text
+              variant="bodySmall"
+              style={{ textAlign: "center", opacity: 0.6, fontStyle: "italic" }}
+            >
               Your application will be sent to your manager for approval.
             </Text>
           </View>
@@ -351,10 +422,12 @@ export default function ApplyLeave() {
       <DatePicker
         visible={isDatePickerVisible}
         onDismiss={() => setIsDatePickerVisible(false)}
-        variant="range"
-        title="Select Leave Dates"
+        variant={leavePeriod?.id === 'full' ? "range" : "single"}
+        title={leavePeriod?.id === 'full' ? "Select Date Range" : "Select Date"}
         rangeValue={dateRange}
         onRangeChange={(range) => setDateRange(range)}
+        value={dateRange.start}
+        onChange={(date) => setDateRange({ start: date, end: date })}
       />
     </View>
   );

@@ -23,16 +23,25 @@ export function NavBar() {
   const isSettings =
     pathname.startsWith("/settings") || pathname.startsWith("/(tabs)/settings");
 
+  // Force hide on specific modules/pages
+  const isLeave = pathname.includes("/home/leave");
+  const isAttendance = pathname.includes("/home/attendance");
+  const isUpdate = pathname.includes("/settings/update");
+  const isNewsflash = pathname.includes("/home/newsflash");
+  
+  const forceHide = isLeave || isAttendance || isUpdate || isNewsflash;
+  const effectivelyHidden = hideTabBar || forceHide;
+
   const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(translateY, {
-      toValue: hideTabBar ? 120 : 0,
+      toValue: effectivelyHidden ? 120 : 0,
       duration: 300,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       useNativeDriver: true,
     }).start();
-  }, [hideTabBar]);
+  }, [effectivelyHidden]);
 
   const handleActionButton = () => {
     if (isHome) {

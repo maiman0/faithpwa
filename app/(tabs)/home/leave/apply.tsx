@@ -60,11 +60,6 @@ export default function ApplyLeave() {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
   useEffect(() => {
-    setHideTabBar(true);
-    return () => setHideTabBar(false);
-  }, []);
-
-  useEffect(() => {
     if (error) {
       toast({ message: error, variant: "error" });
       setError(null);

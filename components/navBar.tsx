@@ -71,6 +71,13 @@ export function NavBar() {
               if (item.id === "update") {
                 router.navigate("/settings");
                 router.push("/settings/update");
+              } else if (item.id === "leave") {
+                // Route to index first
+                router.push("home/leave" as any);
+                // 1 sec delay then to apply page
+                setTimeout(() => {
+                  router.push("home/leave/apply" as any);
+                }, 100);
               } else {
                 router.push(item.route as any);
               }

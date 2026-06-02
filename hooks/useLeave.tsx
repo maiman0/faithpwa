@@ -7,10 +7,14 @@ import { useOverlay } from '../contexts/overlayContext';
 import { LeaveStatus, leaveStatusStyles, LEAVE_TYPES, LEAVE_PERIODS, LEAVE_REASONS } from '../constants/leave';
 import { type Leave } from '../contexts/api/leave';
 import PickerModal from '../components/pickerModal';
+import ClinicModal from '../components/clinicModal';
+import { Clinic } from '../contexts/api/clinic';
+import { useRouter } from 'expo-router';
 
 export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   const theme = useTheme();
-  const { showSheet, hideSheet, toast, confirm, showModal, hideModal } = useOverlay();
+  const router = useRouter();
+  const { showSheet, hideSheet, toast, confirm, showModal, hideModal, showLoader, hideLoader } = useOverlay();
   const { 
     leaves, 
     balances,
@@ -23,10 +27,22 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     clear 
   } = useLeaveStore();
   
+  // Form States
   const [leaveType, setLeaveType] = useState<(typeof LEAVE_TYPES)[0] | null>(null);
   const [leavePeriod, setLeavePeriod] = useState<(typeof LEAVE_PERIODS)[0] | null>(null);
   const [selectedReason, setSelectedReason] = useState<(typeof LEAVE_REASONS)[0] | null>(null);
+  const [remarks, setRemarks] = useState("");
+  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [dateRange, setDateRange] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
+    start: null,
+    end: null,
+  });
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
+  // Form Helpers
   const selectLeaveType = () => {
     showModal({
       content: (
@@ -82,6 +98,119 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
         />
       ),
     });
+  };
+
+  const selectClinic = () => {
+    showModal({
+      content: (
+        <ClinicModal
+          selected={selectedClinic}
+          onSelect={(item) => {
+            setSelectedClinic(item);
+            hideModal();
+          }}
+        />
+      ),
+    });
+  };
+
+  const isFormValid = useMemo(() => {
+    if (!leaveType || !leavePeriod || !selectedReason || !dateRange.start) return false;
+    if (leavePeriod.id === "full" && !dateRange.end) return false;
+    if (leaveType.id === "MC" && !selectedClinic) return false;
+    return true;
+  }, [leaveType, leavePeriod, selectedReason, dateRange, selectedClinic]);
+
+  // Handle clinic reset if leave type changes from MC
+  useEffect(() => {
+    if (leaveType?.id !== 'MC') {
+      setSelectedClinic(null);
+    }
+  }, [leaveType]);
+
+  const handleSubmit = async (attachedDocument: any, documentRefNo: string) => {
+    if (!leaveType) {
+      toast("Please select a leave type.");
+      return;
+    }
+    if (!leavePeriod) {
+      toast("Please select a leave period.");
+      return;
+    }
+
+    const isFullDay = leavePeriod.id === "full";
+    if (!dateRange.start || (isFullDay && !dateRange.end)) {
+      toast(isFullDay ? "Please select a date range." : "Please select a date.");
+      return;
+    }
+
+    if (leaveType.id === "MC" && !selectedClinic) {
+      toast("Please select a clinic.");
+      return;
+    }
+
+    if (!selectedReason) {
+      toast("Please select a reason for your leave.");
+      return;
+    }
+
+    showLoader("Submitting application...");
+
+    try {
+      const formData = new FormData();
+      formData.append("leave_type", leaveType.id);
+      formData.append("leave_period", leavePeriod.id);
+      formData.append("reason", selectedReason.label);
+      formData.append("remarks", remarks);
+      formData.append("document_ref_no", documentRefNo);
+
+      if (selectedClinic && leaveType.id === 'MC') {
+        formData.append("clinic_id", selectedClinic.clinic_id.toString());
+      }
+
+      if (dateRange.start) {
+        formData.append(
+          "start_date",
+          dateRange.start.toISOString().split("T")[0],
+        );
+      }
+      
+      if (!isFullDay && dateRange.start) {
+        formData.append("end_date", dateRange.start.toISOString().split("T")[0]);
+      } else if (dateRange.end) {
+        formData.append("end_date", dateRange.end.toISOString().split("T")[0]);
+      }
+
+      if (attachedDocument) {
+        // @ts-ignore
+        formData.append("document", {
+          uri: attachedDocument.uri,
+          name: attachedDocument.name,
+          type: attachedDocument.type,
+        } as any);
+      }
+
+      const res = await addNewLeave(formData);
+      if (res.status === "success") {
+        toast({
+          message: "Leave application submitted successfully!",
+          variant: "success",
+        });
+        router.back();
+      } else {
+        toast({
+          message: res.message || "Failed to submit application",
+          variant: "error",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        message: err.message || "An unexpected error occurred",
+        variant: "error",
+      });
+    } finally {
+      hideLoader();
+    }
   };
 
   useEffect(() => {
@@ -209,14 +338,23 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     clearLeaves: clear,
     showDetails,
     hasLeaves: leaves.length > 0,
+    
+    // Form Exports
     leaveType,
-    setLeaveType,
     selectLeaveType,
     leavePeriod,
-    setLeavePeriod,
     selectLeavePeriod,
     selectedReason,
-    setSelectedReason,
     selectReason,
+    remarks,
+    setRemarks,
+    selectedClinic,
+    selectClinic,
+    dateRange,
+    setDateRange,
+    isDatePickerVisible,
+    setIsDatePickerVisible,
+    isFormValid,
+    handleSubmit,
   };
 };

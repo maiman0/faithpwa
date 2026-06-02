@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -8,33 +8,36 @@ import {
 } from "react-native";
 import { Text, Button, TextInput, useTheme, Divider } from "react-native-paper";
 import { useDesign } from "../../../../contexts/designContext";
-import { useTabs } from "../../../../contexts/tabContext";
 import { useOverlay } from "../../../../contexts/overlayContext";
 import Header from "../../../../components/header";
 import { useLeave } from "../../../../hooks/useLeave";
-import { useRouter } from "expo-router";
 import DocumentModal from "../../../../components/documentModal";
-import ClinicModal from "../../../../components/clinicModal";
 import DatePicker from "../../../../components/datePicker";
 import { useUpload } from "../../../../hooks/useUpload";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Clinic } from "../../../../contexts/api/clinic";
 
 export default function ApplyLeave() {
   const theme = useTheme();
   const tokens = useDesign();
-  const router = useRouter();
-  const { setHideTabBar } = useTabs();
-  const { toast, showLoader, hideLoader, showModal, hideModal, modalVisible } =
-    useOverlay();
+  const { toast, showModal, hideModal, modalVisible } = useOverlay();
+  
   const {
-    apply,
     leaveType,
     selectLeaveType,
     leavePeriod,
     selectLeavePeriod,
     selectedReason,
     selectReason,
+    remarks,
+    setRemarks,
+    selectedClinic,
+    selectClinic,
+    dateRange,
+    setDateRange,
+    isDatePickerVisible,
+    setIsDatePickerVisible,
+    isFormValid,
+    handleSubmit,
   } = useLeave();
 
   const {
@@ -47,51 +50,12 @@ export default function ApplyLeave() {
     setError,
   } = useUpload();
 
-  const [remarks, setRemarks] = useState("");
-  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-
-  const [dateRange, setDateRange] = useState<{
-    start: Date | null;
-    end: Date | null;
-  }>({
-    start: null,
-    end: null,
-  });
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-
   useEffect(() => {
     if (error) {
       toast({ message: error, variant: "error" });
       setError(null);
     }
   }, [error]);
-
-  useEffect(() => {
-    if (leaveType?.id !== 'MC') {
-      setSelectedClinic(null);
-    }
-  }, [leaveType]);
-
-  const isFormValid = useMemo(() => {
-    if (!leaveType || !leavePeriod || !selectedReason || !dateRange.start) return false;
-    if (leavePeriod.id === "full" && !dateRange.end) return false;
-    if (leaveType.id === "MC" && !selectedClinic) return false;
-    return true;
-  }, [leaveType, leavePeriod, selectedReason, dateRange, selectedClinic]);
-
-  const selectClinic = () => {
-    showModal({
-      content: (
-        <ClinicModal
-          selected={selectedClinic}
-          onSelect={(item) => {
-            setSelectedClinic(item);
-            hideModal();
-          }}
-        />
-      ),
-    });
-  };
 
   const handleAttachDocument = async () => {
     const doc = await pick();
@@ -127,92 +91,6 @@ export default function ApplyLeave() {
     }
   }, [documentRefNo]);
 
-  const handleSubmit = async () => {
-    if (!leaveType) {
-      toast("Please select a leave type.");
-      return;
-    }
-    if (!leavePeriod) {
-      toast("Please select a leave period.");
-      return;
-    }
-
-    const isFullDay = leavePeriod.id === "full";
-    if (!dateRange.start || (isFullDay && !dateRange.end)) {
-      toast(isFullDay ? "Please select a date range." : "Please select a date.");
-      return;
-    }
-
-    if (leaveType.id === "MC" && !selectedClinic) {
-      toast("Please select a clinic.");
-      return;
-    }
-
-    if (!selectedReason) {
-      toast("Please select a reason for your leave.");
-      return;
-    }
-
-    showLoader("Submitting application...");
-
-    try {
-      const formData = new FormData();
-      formData.append("leave_type", leaveType.id);
-      formData.append("leave_period", leavePeriod.id);
-      formData.append("reason", selectedReason.label);
-      formData.append("remarks", remarks);
-      formData.append("document_ref_no", documentRefNo);
-
-      if (selectedClinic && leaveType.id === 'MC') {
-        formData.append("clinic_id", selectedClinic.clinic_id.toString());
-      }
-
-      if (dateRange.start) {
-        formData.append(
-          "start_date",
-          dateRange.start.toISOString().split("T")[0],
-        );
-      }
-      
-      // If single mode (half day), end_date = start_date for API consistency
-      if (!isFullDay && dateRange.start) {
-        formData.append("end_date", dateRange.start.toISOString().split("T")[0]);
-      } else if (dateRange.end) {
-        formData.append("end_date", dateRange.end.toISOString().split("T")[0]);
-      }
-
-      if (attachedDocument) {
-        // @ts-ignore
-        formData.append("document", {
-          uri: attachedDocument.uri,
-          name: attachedDocument.name,
-          type: attachedDocument.type,
-        } as any);
-      }
-
-      const res = await apply(formData);
-      if (res.status === "success") {
-        toast({
-          message: "Leave application submitted successfully!",
-          variant: "success",
-        });
-        router.back();
-      } else {
-        toast({
-          message: res.message || "Failed to submit application",
-          variant: "error",
-        });
-      }
-    } catch (err: any) {
-      toast({
-        message: err.message || "An unexpected error occurred",
-        variant: "error",
-      });
-    } finally {
-      hideLoader();
-    }
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <KeyboardAvoidingView
@@ -228,8 +106,8 @@ export default function ApplyLeave() {
           showsVerticalScrollIndicator={false}
         >
           <Header
-            title="New Application"
-            subtitle="Request time off"
+            title="Leave Application"
+            subtitle="Submit your time off request"
             showBack
           />
 
@@ -261,32 +139,6 @@ export default function ApplyLeave() {
                 </View>
               </Pressable>
 
-              <Pressable onPress={() => {
-                if (!leavePeriod) {
-                  toast("Please select a leave period first.");
-                  return;
-                }
-                setIsDatePickerVisible(true);
-              }}>
-                <View pointerEvents="none">
-                  <TextInput
-                    mode="outlined"
-                    label="Leave Dates"
-                    disabled={!leavePeriod}
-                    value={
-                      dateRange.start 
-                        ? (leavePeriod?.id === 'full' && dateRange.end)
-                          ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
-                          : dateRange.start.toLocaleDateString()
-                        : "Select dates"
-                    }
-                    editable={false}
-                    left={<TextInput.Icon icon="calendar" />}
-                    outlineStyle={{ borderRadius: tokens.radii.lg }}
-                  />
-                </View>
-              </Pressable>
-
               <Pressable onPress={selectReason}>
                 <View pointerEvents="none">
                   <TextInput
@@ -300,7 +152,35 @@ export default function ApplyLeave() {
                 </View>
               </Pressable>
 
-              {leaveType?.id === 'MC' && (
+              <Pressable
+                onPress={() => {
+                  if (!leavePeriod) {
+                    toast("Please select a leave period first.");
+                    return;
+                  }
+                  setIsDatePickerVisible(true);
+                }}
+              >
+                <View pointerEvents="none">
+                  <TextInput
+                    mode="outlined"
+                    label="Leave Dates"
+                    disabled={!leavePeriod}
+                    value={
+                      dateRange.start
+                        ? leavePeriod?.id === "full" && dateRange.end
+                          ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
+                          : dateRange.start.toLocaleDateString()
+                        : "Select dates"
+                    }
+                    editable={false}
+                    left={<TextInput.Icon icon="calendar" />}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
+                  />
+                </View>
+              </Pressable>
+
+              {leaveType?.id === "MC" && (
                 <Pressable onPress={selectClinic}>
                   <View pointerEvents="none">
                     <TextInput
@@ -449,13 +329,19 @@ export default function ApplyLeave() {
 
             <Button
               mode="contained"
-              onPress={handleSubmit}
+              onPress={() => handleSubmit(attachedDocument, documentRefNo)}
               style={{
                 borderRadius: tokens.radii.pill,
                 paddingVertical: 6,
-                backgroundColor: isFormValid ? theme.colors.primary : theme.colors.surfaceVariant,
+                backgroundColor: isFormValid
+                  ? theme.colors.primary
+                  : theme.colors.surfaceVariant,
               }}
-              textColor={isFormValid ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+              textColor={
+                isFormValid
+                  ? theme.colors.onPrimary
+                  : theme.colors.onSurfaceVariant
+              }
               contentStyle={{ height: 48 }}
             >
               Submit Application
@@ -474,8 +360,8 @@ export default function ApplyLeave() {
       <DatePicker
         visible={isDatePickerVisible}
         onDismiss={() => setIsDatePickerVisible(false)}
-        variant={leavePeriod?.id === 'full' ? "range" : "single"}
-        title={leavePeriod?.id === 'full' ? "Select Date Range" : "Select Date"}
+        variant={leavePeriod?.id === "full" ? "range" : "single"}
+        title={leavePeriod?.id === "full" ? "Select Date Range" : "Select Date"}
         rangeValue={dateRange}
         onRangeChange={(range) => setDateRange(range)}
         value={dateRange.start}

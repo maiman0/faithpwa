@@ -122,22 +122,33 @@ export function DatePickerContent({
       return;
     }
 
+    // Reset if both selected or none selected
     if (!tempRange.start || (tempRange.start && tempRange.end)) {
       setTempRange({ start: date, end: null });
       return;
     }
 
+    // If tapping before start, make it the new start and old start becomes end
     if (date < tempRange.start) {
       setTempRange({ start: date, end: tempRange.start });
       return;
     }
 
+    // Normal range end selection (includes tapping the same date twice)
     setTempRange({ start: tempRange.start, end: date });
   };
 
   const handleConfirm = () => {
-    if (variant === "single" && tempSingle) onChange?.(tempSingle);
-    if (variant === "range") onRangeChange?.(tempRange);
+    if (variant === "single" && tempSingle) {
+      onChange?.(tempSingle);
+    } else if (variant === "range" && tempRange.start) {
+      // If end is null, assume it's a single day range (start === end)
+      const range = {
+        start: tempRange.start,
+        end: tempRange.end || tempRange.start
+      };
+      onRangeChange?.(range);
+    }
     onConfirm?.();
   };
   
@@ -154,22 +165,26 @@ export function DatePickerContent({
   const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
 
   const confirmLabel = useMemo(() => {
+    const formatDate = (d: Date) => d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
     if (variant === "single") {
-      return tempSingle
-        ? tempSingle.toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
-        : "Select Date";
+      return tempSingle ? `Confirm ${formatDate(tempSingle)}` : "Select Date";
     }
-    return tempRange.start && tempRange.end
-      ? `${tempRange.start.getDate()} - ${tempRange.end.toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric"
-        })}`
-      : "Select Range";
+
+    if (tempRange.start) {
+      // Case 1: Only start selected (treat as single day until end is picked)
+      if (!tempRange.end || isSameDay(tempRange.start, tempRange.end)) {
+        return `Confirm ${formatDate(tempRange.start)}`;
+      }
+      // Case 2: Full range selected
+      return `Confirm ${tempRange.start.getDate()} - ${formatDate(tempRange.end)}`;
+    }
+
+    return "Select Range";
   }, [tempSingle, tempRange, variant]);
 
   return (
@@ -322,6 +337,8 @@ export function DatePickerContent({
               const selected = variant === "single" 
                 ? isSameDay(tempSingle, date) 
                 : isSameDay(tempRange.start, date) || isSameDay(tempRange.end, date);
+              
+              const inRange = variant === "range" && tempRange.start && tempRange.end && date > tempRange.start && date < tempRange.end;
               const isToday = isSameDay(today, date);
 
               return (
@@ -337,7 +354,9 @@ export function DatePickerContent({
                     borderRadius: radii.lg,
                     backgroundColor: selected 
                       ? theme.colors.primary 
-                      : theme.colors.surfaceVariant + "40",
+                      : inRange 
+                        ? theme.colors.primary + "20" 
+                        : theme.colors.surfaceVariant + "40",
                     borderWidth: isToday && !selected ? 1.5 : 0,
                     borderColor: theme.colors.primary,
                   }}
@@ -345,22 +364,25 @@ export function DatePickerContent({
                   <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
                     <Text style={{
                       fontSize: 14,
-                      fontWeight: selected || isToday ? "800" : "600",
-                      color: selected ? theme.colors.onPrimary : theme.colors.onSurface,
+                      fontWeight: selected || isToday || inRange ? "800" : "600",
+                      color: selected ? theme.colors.onPrimary : inRange ? theme.colors.primary : theme.colors.onSurface,
                       width: 30
                     }}>
                       {date.getDate()}
                     </Text>
                     <Text style={{
                       fontSize: 14,
-                      fontWeight: selected ? "700" : "500",
-                      color: selected ? theme.colors.onPrimary : theme.colors.onSurface,
+                      fontWeight: selected || inRange ? "700" : "500",
+                      color: selected ? theme.colors.onPrimary : inRange ? theme.colors.primary : theme.colors.onSurface,
                     }}>
                       {date.toLocaleDateString("en-US", { weekday: "long" })}
                     </Text>
                   </View>
                   {selected && (
                     <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.onPrimary} />
+                  )}
+                  {inRange && !selected && (
+                    <MaterialCommunityIcons name="circle-medium" size={20} color={theme.colors.primary} />
                   )}
                 </TouchableOpacity>
               );

@@ -1,6 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useRoomStore } from '../contexts/api/roomStore';
 import { getRoomAvailabilityByDay } from '../contexts/api/room';
+import { useOverlay } from '../contexts/overlayContext';
+import { useStaff } from './useStaff';
 
 export const useRoom = () => {
   const {
@@ -25,6 +27,9 @@ export const useRoom = () => {
     cancelBooking,
     clear,
   } = useRoomStore();
+
+  const { staff } = useStaff();
+  const { toast, showLoader, hideLoader } = useOverlay();
 
   // Initial fetch of rooms and bookings
   useEffect(() => {
@@ -71,6 +76,41 @@ export const useRoom = () => {
     };
   };
 
+  const confirmBooking = async (onSuccess?: () => void) => {
+    const payload = getBookingPayload();
+    if (!payload) return;
+
+    showLoader("Securing your room...");
+    
+    try {
+      const res = await createBooking(
+        payload.bookDate,
+        payload.startTime,
+        payload.endTime,
+        payload.room,
+        payload.tower,
+        payload.level,
+        payload.purpose,
+        staff?.first_name || "Staff",
+        staff?.email || ""
+      );
+
+      if ('error' in res) {
+        toast({ message: res.error, variant: 'error' });
+        return res;
+      } else {
+        toast({ message: "Room booked successfully!", variant: 'success' });
+        onSuccess?.();
+        return res;
+      }
+    } catch (err: any) {
+      toast({ message: err.message || "Failed to book room", variant: 'error' });
+      return { error: err.message };
+    } finally {
+      hideLoader();
+    }
+  };
+
   return {
     rooms,
     myBookings,
@@ -82,6 +122,7 @@ export const useRoom = () => {
     refreshRooms: fetchRooms,
     refreshBookings: fetchBookings,
     book: createBooking,
+    confirmBooking,
     cancel: cancelBooking,
     getAvailability: getRoomAvailabilityByDay,
     clearRoomData: clear,

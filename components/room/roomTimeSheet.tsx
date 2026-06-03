@@ -3,7 +3,6 @@ import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Text, Button, Divider, useTheme, TextInput, Chip } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { useRoom } from "../../hooks/useRoom";
-import { useStaff } from "../../hooks/useStaff";
 import { useOverlay } from "../../contexts/overlayContext";
 import { Room } from "../../contexts/api/room";
 
@@ -21,14 +20,13 @@ type Props = {
 export default function RoomTimeSheet({ room, timeSlots }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
-  const { staff } = useStaff();
-  const { toast, showLoader, hideLoader, hideSheet } = useOverlay();
+  const { hideSheet } = useOverlay();
   const { 
     selectedSlots, 
     setSelectedSlots,
     purpose, 
     setPurpose, 
-    book,
+    confirmBooking,
     isBookingValid,
     selectedDate 
   } = useRoom();
@@ -91,31 +89,7 @@ export default function RoomTimeSheet({ room, timeSlots }: Props) {
   }, [selectedSlots]);
 
   const handleConfirm = async () => {
-    if (!bookingSummary) return;
-    showLoader("Securing your room...");
-    try {
-      const res = await book(
-        selectedDate,
-        bookingSummary.start,
-        bookingSummary.end,
-        room.Room_Name,
-        room.Tower,
-        room.Level,
-        purpose,
-        staff?.first_name || "Staff",
-        staff?.email || ""
-      );
-      if ('error' in res) {
-        toast({ message: res.error, variant: 'error' });
-      } else {
-        toast({ message: "Room booked successfully!", variant: 'success' });
-        hideSheet();
-      }
-    } catch (err: any) {
-      toast({ message: err.message || "Failed to book room", variant: 'error' });
-    } finally {
-      hideLoader();
-    }
+    await confirmBooking(hideSheet);
   };
 
   if (step === 1) {

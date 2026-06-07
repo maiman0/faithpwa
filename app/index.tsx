@@ -9,6 +9,7 @@ import {
   TextInput as RNTextInput,
 } from "react-native";
 import { Text, TextInput, Button, useTheme } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
 
@@ -44,28 +45,34 @@ export default function Login() {
       <View
         style={{
           position: "absolute",
-          width: 320,
-          height: 320,
-          borderRadius: 999,
-          backgroundColor: theme.colors.primary,
-          top: 120,
-          left: -140,
-          opacity: 0.9,
+          top: 100,
+          left: -80,
+          opacity: 0.1,
+          transform: [{ rotate: "-15deg" }],
         }}
-      />
+      >
+        <MaterialCommunityIcons
+          name="domain"
+          size={320}
+          color={theme.colors.primary}
+        />
+      </View>
 
       <View
         style={{
           position: "absolute",
-          width: 280,
-          height: 280,
-          borderRadius: 999,
-          backgroundColor: theme.colors.secondary,
-          bottom: 140,
-          right: -120,
-          opacity: 0.8,
+          bottom: 100,
+          right: -80,
+          opacity: 0.08,
+          transform: [{ rotate: "15deg" }],
         }}
-      />
+      >
+        <MaterialCommunityIcons
+          name="account-group"
+          size={280}
+          color={theme.colors.secondary}
+        />
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -258,8 +265,9 @@ export default function Login() {
                 variant="labelSmall"
                 style={{ color: theme.colors.outline, textAlign: "center" }}
               >
-                This is dummy PWA version of FAITH. Username: user | Password:
-                123 to continue.
+                A unified HR workspace connecting employee services, operations,
+                and workforce management — helping organizations build a
+                productive, respectful, and collaborative workplace.
               </Text>
             </View>
           </View>

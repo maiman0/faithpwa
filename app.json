@@ -26,9 +26,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "name": "Faith HRMS",
+      "name": "Faith PWA",
       "shortName": "Faith",
-      "description": "HR Management System for Customer Service Staff",
+      "description": "Empowering People & Workplaces",
       "display": "standalone",
       "themeColor": "#E6F4FE",
       "backgroundColor": "#ffffff",
@@ -38,8 +38,6 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "plugins": [
-      "expo-router"
-    ]
+    "plugins": ["expo-router"]
   }
 }

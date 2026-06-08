@@ -33,6 +33,7 @@ export default function RoomBookingSheet({
     selectedSlots,
     setSelectedSlots,
     selectedDate,
+    formattedDate,
     selectedRoom,
     proceedToBooking,
   } = useRoom();
@@ -145,7 +146,7 @@ export default function RoomBookingSheet({
           variant="bodySmall"
           style={{ color: theme.colors.onSurfaceVariant, fontWeight: "600" }}
         >
-          {selectedDate} • {room.Tower} • {room.Level}
+          {formattedDate} • {room.Tower} • {room.Level}
         </Text>
         <Divider style={{ marginTop: tokens.spacing.md }} />
       </View>

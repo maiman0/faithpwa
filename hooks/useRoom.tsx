@@ -315,10 +315,20 @@ export const useRoom = () => {
     }, 250);
   }, [hideSheet, router]);
 
+  const formattedDate = useMemo(() => {
+    return new Date(selectedDate).toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+    });
+  }, [selectedDate]);
+
   return {
     rooms,
     myBookings,
     selectedDate,
+    formattedDate,
     loading,
     error,
     stats,

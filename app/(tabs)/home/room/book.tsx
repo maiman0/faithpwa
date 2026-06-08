@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, ImageBackground } from 'react-native';
 import { Text, Button, useTheme, TextInput, Card } from 'react-native-paper';
 import { useDesign } from '../../../../contexts/designContext';
 import { useRoom } from '../../../../hooks/useRoom';
@@ -13,6 +13,7 @@ export default function BookRoom() {
     selectedRoom,
     selectedSlots,
     selectedDate,
+    formattedDate,
     purpose, 
     setPurpose, 
     confirmBooking,
@@ -20,6 +21,8 @@ export default function BookRoom() {
     loading,
     router
   } = useRoom();
+
+  const imageUrl = selectedRoom ? `https://endpoint.daythree.ai/faithMobile/room/${selectedRoom.room_id}.jpeg` : null;
 
   const bookingSummary = React.useMemo(() => {
     if (selectedSlots.length === 0) return null;
@@ -37,15 +40,6 @@ export default function BookRoom() {
     await confirmBooking();
   };
 
-  if (!selectedRoom || selectedSlots.length === 0) {
-    return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text variant="titleMedium" style={{ textAlign: 'center', marginBottom: 20 }}>No room or time slots selected.</Text>
-        <Button mode="contained" onPress={() => router.back()}>Go Back</Button>
-      </View>
-    );
-  }
-
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView 
@@ -62,15 +56,32 @@ export default function BookRoom() {
         />
 
         <Card mode="contained" style={{ backgroundColor: theme.colors.primaryContainer + "20", borderRadius: tokens.radii.xl }}>
-            <Card.Content style={{ gap: 4 }}>
-                <Text variant="labelMedium" style={{ color: theme.colors.primary, fontWeight: '800' }}>RESERVATION SUMMARY</Text>
-                <Text variant="headlineSmall" style={{ fontWeight: '900' }}>{selectedRoom.Room_Name}</Text>
-                <Text variant="bodyLarge" style={{ fontWeight: '700', color: theme.colors.onSurfaceVariant }}>
-                    {selectedDate} • {bookingSummary?.start} - {bookingSummary?.end}
-                </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {selectedRoom.Tower} • {selectedRoom.Level}
-                </Text>
+            <Card.Content style={{ flexDirection: 'row', gap: tokens.spacing.md, padding: tokens.spacing.sm }}>
+                {imageUrl && (
+                    <ImageBackground
+                        source={{ uri: imageUrl }}
+                        style={{ 
+                            width: 100, 
+                            height: 100, 
+                            borderRadius: tokens.radii.lg, 
+                            overflow: 'hidden',
+                            backgroundColor: theme.colors.surfaceVariant
+                        }}
+                    />
+                )}
+                <View style={{ flex: 1, justifyContent: 'center', gap: 2 }}>
+                    <Text variant="labelMedium" style={{ color: theme.colors.primary, fontWeight: '800' }}>RESERVATION SUMMARY</Text>
+                    <Text variant="titleLarge" style={{ fontWeight: '900' }}>{selectedRoom?.Room_Name}</Text>
+                    <Text variant="bodyMedium" style={{ fontWeight: '700', color: theme.colors.onSurfaceVariant }}>
+                        {formattedDate}
+                    </Text>
+                    <Text variant="bodyMedium" style={{ fontWeight: '700', color: theme.colors.onSurfaceVariant }}>
+                        {bookingSummary?.start} - {bookingSummary?.end}
+                    </Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                        {selectedRoom?.Tower} • {selectedRoom?.Level}
+                    </Text>
+                </View>
             </Card.Content>
         </Card>
 
@@ -82,14 +93,9 @@ export default function BookRoom() {
                     placeholder="e.g. Project Discussion, Team Meeting"
                     value={purpose}
                     onChangeText={setPurpose}
-                    multiline
-                    numberOfLines={4}
                     outlineStyle={{ borderRadius: tokens.radii.xl }}
                     style={{ backgroundColor: theme.colors.surface }}
                 />
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginLeft: 4 }}>
-                    Min. 3 characters required
-                </Text>
             </View>
 
             <View style={{ gap: 8 }}>
@@ -112,7 +118,6 @@ export default function BookRoom() {
             contentStyle={{ height: 56 }}
             style={{ borderRadius: tokens.radii.pill, marginTop: tokens.spacing.md }}
             labelStyle={{ fontWeight: '900', fontSize: 16 }}
-            loading={loading}
         >
             Confirm Reservation
         </Button>

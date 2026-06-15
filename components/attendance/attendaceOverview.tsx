@@ -5,6 +5,17 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { design } from "../../constants/design";
 import { useAttendance } from "../../hooks/useAttendance";
 import { getStatusFromRecord, attendanceStatuses } from "../../constants/attendance";
+import {
+  getDateParts,
+  formatTime,
+  formatDuration,
+  formatWorkedHours,
+  isToday,
+  formatMonthYear,
+  getMonthMeta,
+  getWeekDates,
+  toDateKey,
+} from "../../helpers/attendance";
 import NoData from "../noData";
 
 export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly" }) {
@@ -12,48 +23,49 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
   const { records, loading, noRecords } = useAttendance();
   const { spacing, radii, elevation } = design;
 
-  const today = new Date();
-  const todayDate = today.getDate();
-
   const data = useMemo(() => {
     // Map API records to UI format
     return records.map(record => {
-      const d = new Date(record.schedule_date);
+      const parts = getDateParts(record.schedule_date);
       const statusKey = getStatusFromRecord(record);
       const statusInfo = attendanceStatuses[statusKey];
-      
+      const checkInRaw = record.actual_login || record.original_login;
+      const checkOutRaw = record.actual_logout || record.original_logout;
+
       return {
         ...record,
-        date: d.getDate(),
-        month: d.toLocaleString('default', { month: 'short' }),
-        day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        date: parts?.day ?? 0,
+        month: parts?.month ?? "",
+        day: parts?.weekday ?? "",
         displayStatus: statusInfo.label,
         color: statusInfo.dotColor,
         cardColor: statusInfo.cardColor,
         icon: statusInfo.icon,
-        checkIn: record.actual_login || record.original_login || "--",
-        checkOut: record.actual_logout || record.original_logout || "--",
-        workingHours: record.login_difference || "--", // Or calculate from login/logout
+        checkIn: formatTime(checkInRaw, "--"),
+        checkOut: formatTime(checkOutRaw, "--"),
+        lateBy: formatDuration(record.login_difference, "--"),
+        workingHours: formatWorkedHours(checkInRaw, checkOutRaw, "--"),
       };
     }).sort((a, b) => new Date(a.schedule_date).getTime() - new Date(b.schedule_date).getTime());
   }, [records]);
 
-  const displayedData = useMemo(() => {
-    if (view === "Weekly") {
-      // Show last 7 days or current week
-      return data.slice(-7);
-    }
-    return data;
-  }, [data, view]);
+  const recordByDate = useMemo(() => {
+    const map = new Map<string, (typeof data)[number]>();
+    data.forEach((item) => {
+      const key = toDateKey(item.schedule_date);
+      if (key) map.set(key, item);
+    });
+    return map;
+  }, [data]);
 
   const [selected, setSelected] = useState<any>(null);
 
   useEffect(() => {
     if (data.length > 0 && !selected) {
-      const todayItem = data.find((item) => item.date === todayDate);
+      const todayItem = data.find((item) => isToday(item.schedule_date));
       setSelected(todayItem || data[data.length - 1]);
     }
-  }, [data, todayDate, selected]);
+  }, [data, selected]);
 
   if (loading && records.length === 0) {
     return (
@@ -77,7 +89,9 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
 
   if (!selected) return null;
 
-  const firstDayOffset = data.length > 0 ? new Date(data[0].schedule_date).getDay() - 1 : 0;
+  const today = new Date();
+  const weekDates = getWeekDates(today);
+  const { year, month, daysInMonth, leadingOffset } = getMonthMeta(today);
 
   return (
     <Card
@@ -140,7 +154,7 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
           {[
             { label: "Check In", value: selected.checkIn },
             { label: "Check Out", value: selected.checkOut },
-            { label: "Diff", value: selected.login_difference || "--" },
+            { label: "Hours", value: selected.workingHours },
           ].map((item, idx) => (
             <View
               key={idx}
@@ -167,30 +181,39 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
       <View style={{ padding: spacing.md }}>
         {view === "Weekly" ? (
           <View style={{ flexDirection: "row", justifyContent: "space-between", gap: spacing.sm }}>
-            {displayedData.map((item) => {
-              const active = selected.attendance_id === item.attendance_id;
-              const isToday = item.date === todayDate;
+            {weekDates.map((d) => {
+              const item = recordByDate.get(toDateKey(d) ?? "");
+              const active = !!item && selected.attendance_id === item.attendance_id;
+              const todayFlag = isToday(d);
+              const initial = d
+                .toLocaleDateString("en-US", { weekday: "short" })
+                .charAt(0);
               return (
-                <View key={item.attendance_id} style={{ flex: 1, alignItems: "center", gap: spacing.xs }}>
+                <View key={d.toISOString()} style={{ flex: 1, alignItems: "center", gap: spacing.xs }}>
                   <Text
                     style={{
                       fontSize: 12,
-                      fontWeight: isToday ? "900" : "700",
-                      color: isToday ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                      opacity: isToday ? 1 : 0.6,
+                      fontWeight: todayFlag ? "900" : "700",
+                      color: todayFlag ? theme.colors.primary : theme.colors.onSurfaceVariant,
+                      opacity: todayFlag ? 1 : 0.6,
                     }}
                   >
-                    {item.day.charAt(0).toUpperCase()}
+                    {initial}
                   </Text>
                   <Pressable
-                    onPress={() => setSelected(item)}
+                    disabled={!item}
+                    onPress={() => item && setSelected(item)}
                     style={{
                       width: "100%",
                       alignItems: "center",
                       paddingVertical: spacing.md,
                       borderRadius: radii.xl,
-                      backgroundColor: active ? theme.colors.primary : theme.colors.background,
-                      borderWidth: isToday ? 2 : 0,
+                      backgroundColor: active
+                        ? theme.colors.primary
+                        : item
+                        ? theme.colors.background
+                        : "transparent",
+                      borderWidth: todayFlag ? 2 : 0,
                       borderColor: active ? "rgba(255,255,255,0.5)" : theme.colors.primary,
                     }}
                   >
@@ -199,19 +222,22 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
                         fontSize: 18,
                         fontWeight: "800",
                         color: active ? theme.colors.onPrimary : theme.colors.onSurface,
+                        opacity: item ? 1 : 0.3,
                       }}
                     >
-                      {item.date}
+                      {d.getDate()}
                     </Text>
-                    <View
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 3,
-                        marginTop: 8,
-                        backgroundColor: active ? theme.colors.onPrimary : item.color,
-                      }}
-                    />
+                    {item && (
+                      <View
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          marginTop: 8,
+                          backgroundColor: active ? theme.colors.onPrimary : item.color,
+                        }}
+                      />
+                    )}
                   </Pressable>
                 </View>
               );
@@ -219,6 +245,16 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
           </View>
         ) : (
           <View style={{ gap: spacing.md }}>
+            <Text
+              variant="titleSmall"
+              style={{
+                fontWeight: "800",
+                color: theme.colors.onSurface,
+                textAlign: "center",
+              }}
+            >
+              {formatMonthYear(today)}
+            </Text>
             <View style={{ flexDirection: "row" }}>
               {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
                 <View key={i} style={{ width: `${100 / 7}%`, alignItems: "center" }}>
@@ -227,24 +263,32 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
               ))}
             </View>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {Array.from({ length: firstDayOffset }).map((_, i) => (
+              {Array.from({ length: leadingOffset }).map((_, i) => (
                 <View key={`empty-${i}`} style={{ width: `${100 / 7}%`, padding: 2, aspectRatio: 1 }} />
               ))}
-              {data.map((item) => {
-                const isToday = item.date === todayDate;
-                const active = selected.attendance_id === item.attendance_id;
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const cellDate = new Date(year, month, dayNum);
+                const item = recordByDate.get(toDateKey(cellDate) ?? "");
+                const active = !!item && selected.attendance_id === item.attendance_id;
+                const todayFlag = isToday(cellDate);
 
                 return (
-                  <View key={item.attendance_id} style={{ width: `${100 / 7}%`, padding: 2 }}>
+                  <View key={`day-${dayNum}`} style={{ width: `${100 / 7}%`, padding: 2 }}>
                     <Pressable
-                      onPress={() => setSelected(item)}
+                      disabled={!item}
+                      onPress={() => item && setSelected(item)}
                       style={{
                         aspectRatio: 1,
                         borderRadius: radii.lg,
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: active ? theme.colors.primary : theme.colors.background,
-                        borderWidth: isToday ? 2 : 0,
+                        backgroundColor: active
+                          ? theme.colors.primary
+                          : item
+                          ? theme.colors.background
+                          : "transparent",
+                        borderWidth: todayFlag ? 2 : 0,
                         borderColor: active ? "rgba(255,255,255,0.5)" : theme.colors.primary,
                       }}
                     >
@@ -252,20 +296,25 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
                         style={{
                           fontSize: 14,
                           fontWeight: "700",
-                          color: active ? theme.colors.onPrimary : theme.colors.onSurface,
+                          color: active
+                            ? theme.colors.onPrimary
+                            : theme.colors.onSurface,
+                          opacity: item ? 1 : 0.3,
                         }}
                       >
-                        {item.date}
+                        {dayNum}
                       </Text>
-                      <View
-                        style={{
-                          width: 4,
-                          height: 4,
-                          borderRadius: 2,
-                          marginTop: 4,
-                          backgroundColor: active ? theme.colors.onPrimary : item.color,
-                        }}
-                      />
+                      {item && (
+                        <View
+                          style={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: 2,
+                            marginTop: 4,
+                            backgroundColor: active ? theme.colors.onPrimary : item.color,
+                          }}
+                        />
+                      )}
                     </Pressable>
                   </View>
                 );

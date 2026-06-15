@@ -45,30 +45,6 @@ export default function Attendance() {
     }, "Updating Logs...");
   };
 
-  const toggleClock = () => {
-    const action = isClockedIn ? "Clock Out" : "Clock In";
-    confirm({
-      title: `${action}?`,
-      message: `Are you sure you want to ${action.toLowerCase()} at ${new Date().toLocaleTimeString()}?`,
-      confirmText: action,
-      onConfirm: () => {
-        const now = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        if (!isClockedIn) {
-          setClockInTime(now);
-          setIsClockedIn(true);
-          toast({ message: `Clocked in at ${now}`, variant: "success" });
-        } else {
-          setIsClockedIn(false);
-          setClockInTime(null);
-          toast({ message: `Clocked out at ${now}`, variant: "info" });
-        }
-      },
-    });
-  };
-
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
     setShowScrollTop(offset > 300);

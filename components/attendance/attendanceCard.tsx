@@ -9,6 +9,7 @@ import {
 } from "../../constants/attendance";
 import { useAttendance } from "../../hooks/useAttendance";
 import { useStaff } from "../../hooks/useStaff";
+import { formatFullDate, formatTime } from "../../helpers/attendance";
 
 export default function AttendanceCard() {
   const { colors } = useTheme();
@@ -16,12 +17,7 @@ export default function AttendanceCard() {
   const { records, stats, loading, noRecords } = useAttendance();
   const { staff } = useStaff();
 
-  const today = new Date();
-  const dateStr = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const dateStr = formatFullDate(new Date());
 
   if (loading && records.length === 0) {
     return (
@@ -245,9 +241,9 @@ export default function AttendanceCard() {
                 fontWeight: "800",
               }}
             >
-              {todayRecord?.actual_login ||
-                todayRecord?.original_login ||
-                "--:--"}
+              {formatTime(
+                todayRecord?.actual_login || todayRecord?.original_login,
+              )}
             </Text>
           </View>
 
@@ -276,9 +272,9 @@ export default function AttendanceCard() {
                 fontWeight: "800",
               }}
             >
-              {todayRecord?.actual_logout ||
-                todayRecord?.original_logout ||
-                "--:--"}
+              {formatTime(
+                todayRecord?.actual_logout || todayRecord?.original_logout,
+              )}
             </Text>
           </View>
         </View>

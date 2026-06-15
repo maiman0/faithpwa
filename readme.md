@@ -1,21 +1,22 @@
 # FAITH Mobile
 
-FAITH is your all-in-one workspace solution for modern teams. This mobile application is a companion to our powerful web platform.
-Built with Expo and React Native, FAITH Mobile helps employees stay connected, productive and organized anytime, anywhere.
+FAITH Mobile is the companion application for the FAITH Workspace Platform, providing employees with a modern mobile experience for managing workplace activities anytime and anywhere.
+
+Built with **Expo** and **React Native**, the application focuses on productivity, accessibility, and a consistent enterprise user experience.
 
 ---
 
 ## Features
 
 - Authentication & User Session
+- Attendance Management
+- Leave Application Management
+- Newsflash & Company Announcements
 - Room Booking Management
-- Workspace Availability Tracking
 - Staff Profile & Settings
-- Interactive Overlay System
-- Toasts, Modals & Page Sheets
+- Reusable Overlay Components
 - Dynamic Theme Support
 - Responsive Mobile UI
-- Scroll-Aware Navigation
 - Design Token System
 
 ---
@@ -35,81 +36,74 @@ Built with Expo and React Native, FAITH Mobile helps employees stay connected, p
 
 FAITH Mobile uses a centralized design system powered by:
 
-- `useTheme()` for semantic theming
-- `useDesign()` for spacing, radius, typography, and layout tokens
+- `useTheme()` for semantic color management
+- `useDesign()` for spacing, radius, typography, sizing, and layout tokens
 
-This ensures:
-- consistent UI
-- scalable components
-- dark/light theme support
-- maintainable styling architecture
+This provides:
+
+- Consistent UI across the application
+- Dark and Light theme support
+- Reusable and scalable components
+- Maintainable styling architecture
 
 ---
 
 ## Main Modules
 
-### Workspace & Room Booking
+### Attendance
 
-- Room availability overview
-- Dynamic room filtering
-- Booking management
-- Availability insights
-- Interactive room listing
+- View attendance records
+- Attendance history tracking
+- Daily attendance information
+
+### Leave Management
+
+- Create leave applications
+- View leave history
+- Update pending leave applications
+- Track leave status
+
+### Newsflash
+
+- View company announcements
+- Read organizational updates
+- Stay informed with the latest news
+
+### Room Booking
+
+- Browse room availability
+- Create room bookings
+- Update existing bookings
+- Manage booking schedules
 
 ### Staff Settings
 
 - Update profile information
-- Contact & address management
-- Personal settings
-- Account preferences
+- Manage contact details
+- Personal preferences
+- Account settings
 
 ### Overlay Components
+
+Reusable UI components used throughout the application:
 
 - Alert Dialogs
 - Confirmation Dialogs
 - Bottom Sheets
-- Fullscreen Loaders
 - Toast Notifications
+- Fullscreen Loaders
 - Modal Components
 
 ---
 
-## Development
+## Backend Integration
 
-### Install Dependencies
+The application communicates with the existing PHP backend through a centralized Context API architecture, providing:
 
-```bash
-npm install
-```
-
-### Start Development Server
-
-```bash
-npx expo start
-```
-
-### Run Android
-
-```bash
-npx expo run:android
-```
-
-### Run iOS
-
-```bash
-npx expo run:ios
-```
-
----
-
-## Environment
-
-Create a `.env` file:
-
-```env
-API_URL=
-APP_ENV=
-```
+- User authentication
+- Data synchronization
+- API state management
+- Shared application state across modules
 
 ---
 
@@ -117,20 +111,23 @@ APP_ENV=
 
 - TypeScript-first architecture
 - Reusable component patterns
-- Tokenized spacing & radius system
+- Token-based design system
 - Context-driven state management
-- Minimal and scalable UI structure
+- Scalable project structure
+- Mobile-first UI implementation
 
 ---
 
 ## UI Philosophy
 
-FAITH focuses on:
-- clean enterprise UX
-- mobile-first interactions
-- soft modern surfaces
-- compact operational layouts
-- accessible navigation patterns
+FAITH Mobile emphasizes:
+
+- Clean enterprise experience
+- Mobile-first interactions
+- Consistent design language
+- Efficient operational workflows
+- Accessible navigation patterns
+- Reusable design tokens and components
 
 ---
 

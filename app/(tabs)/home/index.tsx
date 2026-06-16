@@ -14,7 +14,9 @@ import SectionHeader from "../../../components/section";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../contexts/authContext";
 import { useStaff } from "../../../hooks/useStaff";
+import { useAttendance } from "../../../hooks/useAttendance";
 import { useOverlay } from "../../../contexts/overlayContext";
+import PickerModal from "../../../components/pickerModal";
 import AttendanceCard from "../../../components/attendance/attendanceCard";
 import NewsflashCarousel from "../../../components/newsflash/newsflashCarousel";
 import RowTwo from "../../../components/rowtwo";
@@ -29,7 +31,8 @@ export default function Home() {
   const { staff, displayName, initials, welcomeMessage } = useStaff();
   const { stats: leaveStats } = useLeave();
   const { stats: roomStats, myBookings } = useRoom();
-  const { toast } = useOverlay();
+  const { operationView, setOperationView } = useAttendance();
+  const { toast, showModal, hideModal } = useOverlay();
   const { onScroll } = useTabs();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -62,6 +65,54 @@ export default function Home() {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   };
 
+  const handleAvatarPress = () => {
+    showModal({
+      content: (
+        <PickerModal
+          title="Account"
+          data={[
+            {
+              id: "update",
+              label: "Update Details",
+              icon: "account-edit-outline" as const,
+            },
+            {
+              id: "switch",
+              label: operationView
+                ? "Switch to Manager View"
+                : "Switch to Operation View",
+              icon: "swap-horizontal" as const,
+            },
+          ]}
+          onSelect={(item) => {
+            hideModal();
+            if (item.id === "update") {
+              // Land on the settings index first, then push the update screen
+              // a beat later (same pattern as the nav bar's "Apply Leave") so
+              // the stack doesn't end up with a duplicate update entry.
+              router.navigate("/settings");
+              setTimeout(() => {
+                router.push("/settings/update");
+              }, 100);
+              return;
+            }
+            const next = !operationView;
+            setOperationView(next);
+            toast({
+              message: next
+                ? "Switched to Operation view"
+                : "Switched to Manager view",
+              variant: "info",
+            });
+          }}
+          keyExtractor={(item) => item.id}
+          labelExtractor={(item) => item.label}
+          iconExtractor={(item) => item.icon}
+        />
+      ),
+    });
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
@@ -82,6 +133,7 @@ export default function Home() {
           designation={staff?.designation_name || user?.designation_name || ""}
           avatarText={initials || user?.initials || "U"}
           onNotificationPress={() => router.push("home/newsflash")}
+          onAvatarPress={handleAvatarPress}
         />
         <AttendanceCard />
 

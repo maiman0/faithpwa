@@ -8,14 +8,12 @@ import {
   getStatusFromRecord,
 } from "../../constants/attendance";
 import { useAttendance } from "../../hooks/useAttendance";
-import { useStaff } from "../../hooks/useStaff";
 import { formatFullDate, buildAttendanceDetail } from "../../helpers/attendance";
 
 export default function AttendanceCard() {
   const { colors } = useTheme();
   const tokens = useDesign();
   const { records, stats, loading, noRecords, describeStatus } = useAttendance();
-  const { staff } = useStaff();
 
   const dateStr = formatFullDate(new Date());
 
@@ -179,7 +177,7 @@ export default function AttendanceCard() {
               marginTop: 4,
             }}
           >
-            {staff?.designation_name || "Digital Project"}
+            OPERATION
           </Text>
         </View>
 

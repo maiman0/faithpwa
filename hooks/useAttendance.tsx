@@ -8,9 +8,11 @@ export const useAttendance = () => {
   const {
     records,
     statusMap,
+    operationView,
     loading,
     error,
     fetchAttendance,
+    setOperationView,
     clear,
   } = useAttendanceStore();
 
@@ -52,11 +54,13 @@ export const useAttendance = () => {
   return {
     records,
     statusMap,
+    operationView,
     loading,
     error: noRecords ? null : error, // Hide the error if it's just 'no records'
     noRecords,
     stats,
     describeStatus,
+    setOperationView,
     refreshAttendance: fetchAttendance,
     clearAttendanceData: clear,
   };

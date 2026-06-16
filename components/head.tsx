@@ -10,6 +10,7 @@ type HeadProps = {
   designation: string;
   avatarText: string;
   onNotificationPress?: () => void;
+  onAvatarPress?: () => void;
 };
 
 export default function Head({
@@ -18,6 +19,7 @@ export default function Head({
   designation,
   avatarText,
   onNotificationPress,
+  onAvatarPress,
 }: HeadProps) {
   const { colors } = useTheme();
   const tokens = useDesign();
@@ -102,15 +104,18 @@ export default function Head({
           />
         </Pressable>
 
-        <View
-          style={{
+        <Pressable
+          onPress={onAvatarPress}
+          disabled={!onAvatarPress}
+          style={({ pressed }) => ({
             width: 40,
             height: 40,
             borderRadius: tokens.radii.full,
             backgroundColor: colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
-          }}
+            opacity: pressed ? 0.9 : 1,
+          })}
         >
           <Text
             variant="labelLarge"
@@ -121,7 +126,7 @@ export default function Head({
           >
             {avatarText}
           </Text>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

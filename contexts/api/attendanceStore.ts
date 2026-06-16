@@ -11,10 +11,13 @@ interface AttendanceState {
   records: Attendance[];
   // Status code -> human description, sourced from the API (attStatus.php).
   statusMap: Record<string, string>;
+  // true = operation (own attendance, default); false = manager (team).
+  operationView: boolean;
   loading: boolean;
   error: string | null;
 
   fetchAttendance: () => Promise<void>;
+  setOperationView: (value: boolean) => Promise<void>;
   clear: () => void;
 }
 
@@ -39,16 +42,17 @@ const loadStatusDescriptions = async (
   return Object.fromEntries(entries);
 };
 
-export const useAttendanceStore = create<AttendanceState>((set) => ({
+export const useAttendanceStore = create<AttendanceState>((set, get) => ({
   records: [],
   statusMap: {},
+  operationView: true,
   loading: false,
   error: null,
 
   fetchAttendance: async () => {
     set({ loading: true, error: null });
 
-    const recordRes = await getAttendanceDef();
+    const recordRes = await getAttendanceDef(get().operationView);
 
     if (recordRes && 'error' in recordRes) {
       set({
@@ -66,5 +70,12 @@ export const useAttendanceStore = create<AttendanceState>((set) => ({
     set({ records, statusMap, loading: false });
   },
 
-  clear: () => set({ records: [], statusMap: {}, loading: false, error: null }),
+  setOperationView: async (value) => {
+    if (get().operationView === value) return;
+    set({ operationView: value, records: [], statusMap: {}, error: null });
+    await get().fetchAttendance();
+  },
+
+  clear: () =>
+    set({ records: [], statusMap: {}, operationView: true, loading: false, error: null }),
 }));

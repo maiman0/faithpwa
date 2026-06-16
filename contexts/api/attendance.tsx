@@ -57,10 +57,14 @@ export interface AttendanceStatusError {
 
 export type AttendanceStatusAPIResponse = AttendanceStatus | AttendanceStatusError;
 
-export const getAttendanceDef = async (): Promise<AttendanceAPIResponse | AttendanceError> => {
+// Operation view (default) returns the current user's own attendance via
+// `default=true`; manager view returns the team's attendance with no flag.
+export const getAttendanceDef = async (
+  operationView = true,
+): Promise<AttendanceAPIResponse | AttendanceError> => {
   try {
-    const response = await api.get<AttendanceAPIResponse>('/attendance.php?default=true');
-    // const response = await api.get<AttendanceAPIResponse>('/attendance.php');
+    const url = operationView ? '/attendance.php?default=true' : '/attendance.php';
+    const response = await api.get<AttendanceAPIResponse>(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching attendance records:', error);

@@ -67,12 +67,12 @@ export const applyLeave = async (formData: FormData): Promise<LeaveResponse> => 
   }
 };
 
-export const withdrawLeaveRequest = async (leave_id: number): Promise<LeaveResponse> => {
+export const cancelLeaveRequest = async (leave_id: number): Promise<LeaveResponse> => {
   try {
-    const response = await api.post<LeaveResponse>(`/leave.php?action=withdraw&id=${leave_id}`);
+    const response = await api.post<LeaveResponse>(`/leave.php?action=cancel&id=${leave_id}`);
     return response.data;
   } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Failed to withdraw leave';
+    const message = error?.response?.data?.message || error?.message || 'Failed to cancel leave';
     throw new Error(message);
   }
 };

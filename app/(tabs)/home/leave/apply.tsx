@@ -15,6 +15,7 @@ import DocumentModal from "../../../../components/documentModal";
 import DatePicker from "../../../../components/datePicker";
 import { useUpload } from "../../../../hooks/useUpload";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { leaveRequiresClinic, leaveRequiresDocument } from "../../../../helpers/leave";
 
 export default function ApplyLeave() {
   const theme = useTheme();
@@ -152,35 +153,28 @@ export default function ApplyLeave() {
                 </View>
               </Pressable>
 
-              <Pressable
-                onPress={() => {
-                  if (!leavePeriod) {
-                    toast("Please select a leave period first.");
-                    return;
-                  }
-                  setIsDatePickerVisible(true);
-                }}
-              >
-                <View pointerEvents="none">
-                  <TextInput
-                    mode="outlined"
-                    label="Leave Dates"
-                    disabled={!leavePeriod}
-                    value={
-                      dateRange.start
-                        ? leavePeriod?.id === "full" && dateRange.end
-                          ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
-                          : dateRange.start.toLocaleDateString()
-                        : "Select dates"
-                    }
-                    editable={false}
-                    left={<TextInput.Icon icon="calendar" />}
-                    outlineStyle={{ borderRadius: tokens.radii.lg }}
-                  />
-                </View>
-              </Pressable>
+              {leavePeriod && (
+                <Pressable onPress={() => setIsDatePickerVisible(true)}>
+                  <View pointerEvents="none">
+                    <TextInput
+                      mode="outlined"
+                      label="Leave Dates"
+                      value={
+                        dateRange.start
+                          ? leavePeriod.id === "full" && dateRange.end
+                            ? `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`
+                            : dateRange.start.toLocaleDateString()
+                          : "Select dates"
+                      }
+                      editable={false}
+                      left={<TextInput.Icon icon="calendar" />}
+                      outlineStyle={{ borderRadius: tokens.radii.lg }}
+                    />
+                  </View>
+                </Pressable>
+              )}
 
-              {leaveType?.id === "MC" && (
+              {leaveRequiresClinic(leaveType) && (
                 <Pressable onPress={selectClinic}>
                   <View pointerEvents="none">
                     <TextInput
@@ -218,6 +212,9 @@ export default function ApplyLeave() {
               >
                 <Text variant="titleMedium" style={{ fontWeight: "700" }}>
                   Attachment
+                  {leaveRequiresDocument(leaveType) && (
+                    <Text style={{ color: theme.colors.error }}> *</Text>
+                  )}
                 </Text>
                 {attachedDocument && (
                   <Button

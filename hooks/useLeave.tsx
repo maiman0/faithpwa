@@ -5,9 +5,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLeaveStore } from '../contexts/api/leaveStore';
 import { useOverlay } from '../contexts/overlayContext';
 import { LeaveStatus, leaveStatusStyles, LEAVE_TYPES, LEAVE_PERIODS, LEAVE_REASONS } from '../constants/leave';
+import { leaveRequiresClinic, leaveRequiresDocument, leaveRequirementNote } from '../helpers/leave';
 import { type Leave } from '../contexts/api/leave';
 import PickerModal from '../components/pickerModal';
 import ClinicModal from '../components/clinicModal';
+import LeavePolicy from '../components/leave/leavePolicy';
 import { Clinic } from '../contexts/api/clinic';
 import { useRouter } from 'expo-router';
 
@@ -15,16 +17,16 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   const theme = useTheme();
   const router = useRouter();
   const { showSheet, hideSheet, toast, confirm, showModal, hideModal, showLoader, hideLoader } = useOverlay();
-  const { 
-    leaves, 
+  const {
+    leaves,
     balances,
-    loading, 
-    error, 
-    fetchLeaves, 
+    loading,
+    error,
+    fetchLeaves,
     fetchBalances,
-    addNewLeave, 
-    withdraw, 
-    clear 
+    addNewLeave,
+    cancel,
+    clear
   } = useLeaveStore();
   
   // Form States
@@ -53,6 +55,10 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           onSelect={(item) => {
             setLeaveType(item);
             hideModal();
+            const note = leaveRequirementNote(item);
+            if (note) {
+              toast({ message: note, variant: "info", icon: "information-outline" });
+            }
           }}
           keyExtractor={(item) => item.id}
           labelExtractor={(item) => item.label}
@@ -117,13 +123,13 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   const isFormValid = useMemo(() => {
     if (!leaveType || !leavePeriod || !selectedReason || !dateRange.start) return false;
     if (leavePeriod.id === "full" && !dateRange.end) return false;
-    if (leaveType.id === "MC" && !selectedClinic) return false;
+    if (leaveRequiresClinic(leaveType) && !selectedClinic) return false;
     return true;
   }, [leaveType, leavePeriod, selectedReason, dateRange, selectedClinic]);
 
-  // Handle clinic reset if leave type changes from MC
+  // Reset clinic when switching to a non-medical leave type
   useEffect(() => {
-    if (leaveType?.id !== 'MC') {
+    if (!leaveRequiresClinic(leaveType)) {
       setSelectedClinic(null);
     }
   }, [leaveType]);
@@ -144,8 +150,13 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       return;
     }
 
-    if (leaveType.id === "MC" && !selectedClinic) {
+    if (leaveRequiresClinic(leaveType) && !selectedClinic) {
       toast("Please select a clinic.");
+      return;
+    }
+
+    if (leaveRequiresDocument(leaveType) && !attachedDocument) {
+      toast("Please attach a supporting document for this leave type.");
       return;
     }
 
@@ -164,7 +175,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       formData.append("remarks", remarks);
       formData.append("document_ref_no", documentRefNo);
 
-      if (selectedClinic && leaveType.id === 'MC') {
+      if (selectedClinic && leaveRequiresClinic(leaveType)) {
         formData.append("clinic_id", selectedClinic.clinic_id.toString());
       }
 
@@ -222,27 +233,36 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     }
   }, [leaves.length, balances, loading, error, fetchLeaves, fetchBalances]);
 
-  const handleWithdraw = (id: number) => {
+  const handleCancel = (id: number) => {
     confirm({
-      title: 'Withdraw Application',
-      message: 'Are you sure you want to withdraw this leave application?',
-      confirmText: 'Withdraw',
+      title: 'Cancel Application',
+      message: 'Are you sure you want to cancel this leave application?',
+      confirmText: 'Cancel Leave',
+      cancelText: 'Keep',
       isDestructive: true,
       onConfirm: async () => {
-        const res = await withdraw(id);
+        showLoader('Cancelling application...');
+        const res = await cancel(id);
+        hideLoader();
         if (res.success) {
           hideSheet();
           toast({
-            message: 'Leave application withdrawn successfully',
+            message: 'Leave application cancelled successfully',
             variant: 'success',
           });
         } else {
           toast({
-            message: res.error || 'Failed to withdraw application',
+            message: res.error || 'Failed to cancel application',
             variant: 'error',
           });
         }
       },
+    });
+  };
+
+  const showPolicy = () => {
+    showSheet({
+      content: <LeavePolicy onClose={hideSheet} />,
     });
   };
 
@@ -291,16 +311,16 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           </View>
 
           {item.manager_status === 'Pending' && (
-            <Button 
-              key="withdraw-action"
-              mode="contained-tonal" 
-              onPress={() => handleWithdraw(item.leave_id)}
+            <Button
+              key="cancel-action"
+              mode="contained-tonal"
+              onPress={() => handleCancel(item.leave_id)}
               style={{ marginTop: 8, borderRadius: 12 }}
               buttonColor={theme.colors.errorContainer}
               textColor={theme.colors.onErrorContainer}
               contentStyle={{ height: 48 }}
             >
-              WITHDRAW APPLICATION
+              CANCEL APPLICATION
             </Button>
           )}
         </View>
@@ -334,9 +354,10 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     refreshLeaves: fetchLeaves,
     refreshBalances: fetchBalances,
     apply: addNewLeave,
-    withdrawLeave: withdraw,
+    cancelLeave: cancel,
     clearLeaves: clear,
     showDetails,
+    showPolicy,
     hasLeaves: leaves.length > 0,
     
     // Form Exports

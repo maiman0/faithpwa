@@ -1,22 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   ScrollView,
-  TouchableOpacity,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
 import {
-  Text,
   Button,
-  Card,
-  useTheme,
-  Divider,
-  Icon,
-} from "react-native-paper";
+  useTheme} from "react-native-paper";
 import { useDesign } from "../../../../contexts/designContext";
-import { useTabs } from "../../../../contexts/tabContext";
-import { useOverlay } from "../../../../contexts/overlayContext";
 import Header from "../../../../components/header";
 import ScrollTop from "../../../../components/scrollTop";
 import RowTwo from "../../../../components/rowtwo";
@@ -28,14 +20,9 @@ export default function Leave() {
   const theme = useTheme();
   const tokens = useDesign();
   const router = useRouter();
-  const { setHideTabBar } = useTabs();
-  const { alert } = useOverlay();
-  const { stats } = useLeave();
-
+  const { stats, showPolicy } = useLeave();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
     setShowScrollTop(offset > 300);
@@ -43,14 +30,6 @@ export default function Leave() {
 
   const scrollToTop = () => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  };
-
-  const handleAboutLeave = () => {
-    alert({
-      title: "Leave Policy",
-      message: "• Please ensure you have discussed and obtained verbal approval from your manager before submitting.\n\n• Applications close to the payday cycle (after 20th) may only be reflected in the following month's payslip.\n\n• Emergency leaves must be supported by valid documentation upon return.",
-      buttonText: "Got it"
-    });
   };
 
   return (
@@ -91,7 +70,7 @@ export default function Leave() {
         <View style={{ flexDirection: "row", gap: tokens.spacing.sm }}>
           <Button
             mode="outlined"
-            onPress={handleAboutLeave}
+            onPress={showPolicy}
             style={{
               flex: 1,
               borderRadius: tokens.radii.pill,

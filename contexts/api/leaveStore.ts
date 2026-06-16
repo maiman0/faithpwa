@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { 
-  getLeaveRecords, 
-  applyLeave, 
-  withdrawLeaveRequest, 
-  type Leave, 
-  type LeaveResponse 
+import {
+  getLeaveRecords,
+  applyLeave,
+  cancelLeaveRequest,
+  type Leave,
+  type LeaveResponse
 } from './leave';
 import { getAllLeaveBalances, type LeaveBalanceItem } from './balance';
 
@@ -16,7 +16,7 @@ type LeaveStore = {
   fetchLeaves: () => Promise<void>;
   fetchBalances: () => Promise<void>;
   addNewLeave: (formData: FormData) => Promise<LeaveResponse>;
-  withdraw: (id: number) => Promise<{ success: boolean; error?: string }>;
+  cancel: (id: number) => Promise<{ success: boolean; error?: string }>;
   clear: () => void;
 };
 
@@ -64,16 +64,16 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     }
   },
 
-  withdraw: async (id) => {
+  cancel: async (id) => {
     try {
-      const res = await withdrawLeaveRequest(id);
+      const res = await cancelLeaveRequest(id);
       if (res.status === 'success') {
         set((state) => ({
           leaves: state.leaves.map((l) =>
-            l.leave_id === id ? { ...l, manager_status: 'Withdraw' } : l,
+            l.leave_id === id ? { ...l, manager_status: 'Cancelled' } : l,
           ),
         }));
-        await get().fetchBalances(); // Refresh balances on withdraw
+        await get().fetchBalances(); // Refresh balances on cancel
         return { success: true };
       }
       return { success: false, error: res.message };

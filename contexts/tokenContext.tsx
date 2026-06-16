@@ -10,6 +10,7 @@ type TokenContextType = {
 const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
 const TOKEN_KEY = 'user_token';
+const EXPIRATION_KEY = `${TOKEN_KEY}_expiration`;
 
 export const useToken = () => {
   const context = useContext(TokenContext);
@@ -26,11 +27,36 @@ export const getStoredToken = async () => {
   }
 };
 
+// true only when an expiration was stored and that time has passed.
+export const isTokenExpired = async (): Promise<boolean> => {
+  try {
+    const exp = await AsyncStorage.getItem(EXPIRATION_KEY);
+    if (!exp) return false;
+    const expSeconds = Number(exp);
+    if (!Number.isFinite(expSeconds)) return false;
+    return Math.floor(Date.now() / 1000) >= expSeconds;
+  } catch (e) {
+    console.error('Failed to read token expiration', e);
+    return false;
+  }
+};
+
+// Returns the token only if it exists and hasn't expired; clears it otherwise.
+export const getValidToken = async (): Promise<string | null> => {
+  const token = await getStoredToken();
+  if (!token) return null;
+  if (await isTokenExpired()) {
+    await removeToken();
+    return null;
+  }
+  return token;
+};
+
 export const storeToken = async (token: string, expiration?: number) => {
   try {
     await AsyncStorage.setItem(TOKEN_KEY, token);
     if (expiration) {
-      await AsyncStorage.setItem(`${TOKEN_KEY}_expiration`, expiration.toString());
+      await AsyncStorage.setItem(EXPIRATION_KEY, expiration.toString());
     }
   } catch (e) {
     console.error('Failed to save token', e);
@@ -39,14 +65,14 @@ export const storeToken = async (token: string, expiration?: number) => {
 
 export const removeToken = async () => {
   try {
-    await AsyncStorage.removeItem(TOKEN_KEY);
+    await AsyncStorage.multiRemove([TOKEN_KEY, EXPIRATION_KEY]);
   } catch (e) {
     console.error('Failed to delete token', e);
   }
 };
 
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
-  const getToken = getStoredToken;
+  const getToken = getValidToken;
   const saveToken = storeToken;
   const deleteToken = removeToken;
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { getStoredToken } from '../tokenContext';
+import { getValidToken } from '../tokenContext';
+import { notifySessionExpired } from './session';
 
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || '/api',
@@ -8,7 +9,8 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
-    const token = await getStoredToken();
+    // getValidToken clears and skips an expired token so we never send one.
+    const token = await getValidToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -19,7 +21,13 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error),
+  (error) => {
+    // Session is dead server-side — kick the user out (de-duped in session).
+    if (error?.response?.status === 401) {
+      notifySessionExpired();
+    }
+    return Promise.reject(error);
+  },
 );
 
 export default api;

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useToken } from './tokenContext';
 import { useOverlay } from './overlayContext';
 import { login as apiLogin } from './api/auth';
+import { setSessionExpiredHandler, resetSessionExpired } from './api/session';
 import { useStaffStore } from './api/staffStore';
 import { useBroadcastStore } from './api/broadcastStore';
 import { useLeaveStore } from './api/leaveStore';
@@ -34,6 +35,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearLeaves = useLeaveStore((state) => state.clear);
   const clearRooms = useRoomStore((state) => state.clear);
   const clearAttendance = useAttendanceStore((state) => state.clear);
+
+  // Tracks the live auth state for the session-expired handler (avoids stale
+  // closures and prevents acting/toasting when already logged out).
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const clearAllStores = useCallback(() => {
+    clearStaff();
+    clearBroadcasts();
+    clearLeaves();
+    clearRooms();
+    clearAttendance();
+  }, [clearStaff, clearBroadcasts, clearLeaves, clearRooms, clearAttendance]);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -69,12 +85,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await apiLogin({ username, password });
 
       if (response.status === 'success') {
-        clearStaff(); // Clear staff data before new user logs in
-        clearBroadcasts(); // Clear old broadcasts
-        clearLeaves(); // Clear old leaves
-        clearRooms(); // Clear old rooms
-        clearAttendance(); // Clear old attendance
-        
+        clearAllStores(); // Clear any previous user's cached data
+
         setUser({
           staff_id: response.staff_id,
           first_name: 'Staff',
@@ -82,7 +94,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           designation_name: '',
           initials: 'S',
         });
-        
+        resetSessionExpired(); // Re-arm the kick-out guard for this session
+
         hideLoader();
         toast({
           message: `Welcome back!`,
@@ -113,25 +126,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       await deleteToken();
       setUser(null);
-      clearStaff(); // Clear staff data on logout
-      clearBroadcasts(); // Clear broadcasts on logout
-      clearLeaves(); // Clear leaves on logout
-      clearRooms(); // Clear rooms on logout
-      clearAttendance(); // Clear attendance on logout
+      clearAllStores();
       hideLoader();
-      toast({ 
-        message: 'Successfully logged out. See you soon!', 
-        variant: 'success' 
+      toast({
+        message: 'Successfully logged out. See you soon!',
+        variant: 'success'
       });
     } catch (e) {
       hideLoader();
       console.error('Failed to delete session', e);
-      toast({ 
-        message: 'Could not complete sign out. Please try again.', 
-        variant: 'error' 
+      toast({
+        message: 'Could not complete sign out. Please try again.',
+        variant: 'error'
       });
     }
-  }, [deleteToken, toast, showLoader, hideLoader, clearStaff, clearBroadcasts, clearLeaves, clearRooms, clearAttendance]);
+  }, [deleteToken, toast, showLoader, hideLoader, clearAllStores]);
+
+  // Forced kick-out when the session dies server-side (401) or expires. No
+  // confirmation dialog — just clear everything and bounce to login.
+  const handleSessionExpired = useCallback(async () => {
+    if (!userRef.current) return; // already logged out; ignore
+    try {
+      await deleteToken();
+    } finally {
+      setUser(null);
+      clearAllStores();
+      hideLoader();
+      toast({
+        message: 'Your session has expired. Please sign in again.',
+        variant: 'error',
+      });
+    }
+  }, [deleteToken, hideLoader, toast, clearAllStores]);
+
+  useEffect(() => {
+    setSessionExpiredHandler(handleSessionExpired);
+    return () => setSessionExpiredHandler(null);
+  }, [handleSessionExpired]);
 
   const signOut = useCallback((force = false) => {
     if (force) {

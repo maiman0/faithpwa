@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from "react-native";
 import { Modal, Portal, Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
+import { formatLongDate } from "../helpers/date";
 
 type Variant = "single" | "range";
 type ViewMode = "Weekly" | "Monthly";
@@ -77,7 +78,7 @@ export function DatePickerContent({
           year: "numeric",
         });
       }
-      return `${currentWeekStart.toLocaleDateString("en-US", { month: "short" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
+      return `${currentWeekStart.toLocaleDateString("en-US", { month: "long" })} - ${weekEnd.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`;
     }
   }, [currentMonth, currentWeekStart, view]);
 
@@ -165,23 +166,17 @@ export function DatePickerContent({
   const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
 
   const confirmLabel = useMemo(() => {
-    const formatDate = (d: Date) => d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-
     if (variant === "single") {
-      return tempSingle ? `Confirm ${formatDate(tempSingle)}` : "Select Date";
+      return tempSingle ? `Confirm ${formatLongDate(tempSingle)}` : "Select Date";
     }
 
     if (tempRange.start) {
       // Case 1: Only start selected (treat as single day until end is picked)
       if (!tempRange.end || isSameDay(tempRange.start, tempRange.end)) {
-        return `Confirm ${formatDate(tempRange.start)}`;
+        return `Confirm ${formatLongDate(tempRange.start)}`;
       }
       // Case 2: Full range selected
-      return `Confirm ${tempRange.start.getDate()} - ${formatDate(tempRange.end)}`;
+      return `Confirm ${tempRange.start.getDate()} - ${formatLongDate(tempRange.end)}`;
     }
 
     return "Select Range";

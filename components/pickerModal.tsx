@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Pressable } from "react-native";
+import { View, Pressable, ScrollView } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
@@ -14,6 +14,11 @@ type PickerModalProps<T> = {
   iconExtractor: (item: T) => keyof typeof MaterialCommunityIcons.glyphMap;
 };
 
+// Compact list: show ~4 rows then scroll the rest within the modal.
+const VISIBLE_ITEMS = 4;
+const ROW_HEIGHT = 56;
+const ROW_GAP = 8;
+
 export default function PickerModal<T>({
   title,
   data,
@@ -26,31 +31,23 @@ export default function PickerModal<T>({
   const { colors } = useTheme();
   const tokens = useDesign();
 
+  const scrollable = data.length > VISIBLE_ITEMS;
+  const maxListHeight = ROW_HEIGHT * VISIBLE_ITEMS + ROW_GAP * VISIBLE_ITEMS;
+
   return (
-    <View
-      style={{
-        gap: tokens.spacing.md,
-      }}
-    >
-      <View
-        style={{
-          alignItems: "center",
-        }}
-      >
-        <Text
-          variant="titleMedium"
-          style={{
-            fontWeight: "700",
-          }}
-        >
+    <View style={{ gap: tokens.spacing.md }}>
+      <View style={{ alignItems: "center" }}>
+        <Text variant="titleMedium" style={{ fontWeight: "700" }}>
           {title}
         </Text>
       </View>
 
-      <View
-        style={{
-          gap: tokens.spacing.sm,
-        }}
+      <ScrollView
+        style={scrollable ? { maxHeight: maxListHeight } : undefined}
+        contentContainerStyle={{ gap: ROW_GAP, paddingVertical: 2 }}
+        showsVerticalScrollIndicator={scrollable}
+        nestedScrollEnabled
+        bounces={false}
       >
         {data.map((item) => {
           const isSelected =
@@ -63,9 +60,9 @@ export default function PickerModal<T>({
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
-                gap: tokens.spacing.lg,
-                padding: tokens.spacing.md,
-                borderRadius: tokens.radii["2xl"],
+                gap: tokens.spacing.md,
+                padding: tokens.spacing.sm,
+                borderRadius: tokens.radii.lg,
                 backgroundColor: isSelected
                   ? colors.primaryContainer
                   : colors.surfaceVariant,
@@ -74,9 +71,9 @@ export default function PickerModal<T>({
             >
               <View
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 18,
+                  width: 40,
+                  height: 40,
+                  borderRadius: tokens.radii.md,
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: isSelected ? colors.primary : colors.surface,
@@ -84,45 +81,29 @@ export default function PickerModal<T>({
               >
                 <MaterialCommunityIcons
                   name={iconExtractor(item)}
-                  size={24}
-                  color={
-                    isSelected ? colors.onPrimary : colors.onSurfaceVariant
-                  }
+                  size={20}
+                  color={isSelected ? colors.onPrimary : colors.onSurfaceVariant}
                 />
               </View>
 
               <Text
                 variant="titleSmall"
-                style={{
-                  flex: 1,
-                  fontWeight: "700",
-                }}
+                style={{ flex: 1, fontWeight: "700" }}
               >
                 {labelExtractor(item)}
               </Text>
 
               {isSelected && (
-                <View
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: tokens.radii.full,
-                    backgroundColor: colors.primary,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="check"
-                    size={14}
-                    color={colors.onPrimary}
-                  />
-                </View>
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={22}
+                  color={colors.primary}
+                />
               )}
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
     </View>
   );
 }

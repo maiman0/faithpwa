@@ -17,10 +17,11 @@ type LeaveStore = {
   fetchBalances: () => Promise<void>;
   addNewLeave: (formData: FormData) => Promise<LeaveResponse>;
   cancel: (id: number) => Promise<{ success: boolean; error?: string }>;
+  markCancelled: (id: number) => void;
   clear: () => void;
 };
 
-export const useLeaveStore = create<LeaveStore>((set, get) => ({
+export const useLeaveStore = create<LeaveStore>((set) => ({
   leaves: [],
   balances: null,
   loading: false,
@@ -54,11 +55,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
   addNewLeave: async (formData) => {
     try {
-      const res = await applyLeave(formData);
-      if (res.status === 'success') {
-        await Promise.all([get().fetchLeaves(), get().fetchBalances()]);
-      }
-      return res;
+      return await applyLeave(formData);
     } catch (e: any) {
       return { status: 'error', message: e.message };
     }
@@ -68,12 +65,6 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     try {
       const res = await cancelLeaveRequest(id);
       if (res.status === 'success') {
-        set((state) => ({
-          leaves: state.leaves.map((l) =>
-            l.leave_id === id ? { ...l, manager_status: 'Cancelled' } : l,
-          ),
-        }));
-        await get().fetchBalances(); // Refresh balances on cancel
         return { success: true };
       }
       return { success: false, error: res.message };
@@ -81,6 +72,13 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
       return { success: false, error: e.message };
     }
   },
+
+  markCancelled: (id) =>
+    set((state) => ({
+      leaves: state.leaves.map((l) =>
+        l.leave_id === id ? { ...l, manager_status: 'Cancelled' } : l,
+      ),
+    })),
 
   clear: () => set({ leaves: [], balances: null, loading: false, error: null }),
 }));

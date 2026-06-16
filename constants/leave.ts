@@ -73,9 +73,9 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
 ];
 
 export const LEAVE_PERIODS = [
-  { id: "full", label: "Full Day", icon: "clock-outline" },
-  { id: "morning", label: "First Half", icon: "weather-sunny" },
-  { id: "afternoon", label: "Second Half", icon: "weather-night" },
+  { id: "full", label: "Full Day", value: "Full Day", icon: "clock-outline" },
+  { id: "morning", label: "First Half", value: "1st Half Day", icon: "weather-sunny" },
+  { id: "afternoon", label: "Second Half", value: "2nd Half Day", icon: "weather-night" },
 ];
 
 export const LEAVE_POLICIES: {

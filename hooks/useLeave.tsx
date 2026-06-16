@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLeaveStore } from '../contexts/api/leaveStore';
 import { useOverlay } from '../contexts/overlayContext';
 import { LeaveStatus, leaveStatusStyles, LEAVE_TYPES, LEAVE_PERIODS, LEAVE_REASONS } from '../constants/leave';
-import { leaveRequiresClinic, leaveRequiresDocument, leaveRequirementNote } from '../helpers/leave';
+import { leaveRequiresClinic, leaveRequiresDocument, leaveRequirementNote, toApiDate, formatLeaveDurationLabel } from '../helpers/leave';
+import { daysBetweenInclusive } from '../helpers/date';
 import { type Leave } from '../contexts/api/leave';
 import PickerModal from '../components/pickerModal';
 import ClinicModal from '../components/clinicModal';
@@ -26,6 +27,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     fetchBalances,
     addNewLeave,
     cancel,
+    markCancelled,
     clear
   } = useLeaveStore();
   
@@ -122,10 +124,21 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
 
   const isFormValid = useMemo(() => {
     if (!leaveType || !leavePeriod || !selectedReason || !dateRange.start) return false;
-    if (leavePeriod.id === "full" && !dateRange.end) return false;
     if (leaveRequiresClinic(leaveType) && !selectedClinic) return false;
     return true;
   }, [leaveType, leavePeriod, selectedReason, dateRange, selectedClinic]);
+
+  // 0.5 for any half-day; inclusive day count for full-day.
+  const leaveDuration = useMemo(() => {
+    if (!leavePeriod || !dateRange.start) return 0;
+    if (leavePeriod.id !== "full") return 0.5;
+    return daysBetweenInclusive(dateRange.start, dateRange.end ?? dateRange.start);
+  }, [leavePeriod, dateRange]);
+
+  const leaveDurationLabel = useMemo(
+    () => formatLeaveDurationLabel(leaveDuration),
+    [leaveDuration],
+  );
 
   // Reset clinic when switching to a non-medical leave type
   useEffect(() => {
@@ -145,8 +158,8 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     }
 
     const isFullDay = leavePeriod.id === "full";
-    if (!dateRange.start || (isFullDay && !dateRange.end)) {
-      toast(isFullDay ? "Please select a date range." : "Please select a date.");
+    if (!dateRange.start) {
+      toast("Please select a date.");
       return;
     }
 
@@ -168,9 +181,15 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     showLoader("Submitting application...");
 
     try {
+      // Backend always needs both dates. For half-day, or a full-day with a
+      // single date selected, end mirrors start.
+      const start = dateRange.start;
+      const end = isFullDay ? dateRange.end ?? start : start;
+
       const formData = new FormData();
       formData.append("leave_type", leaveType.id);
-      formData.append("leave_period", leavePeriod.id);
+      formData.append("leave_period", leavePeriod.value);
+      formData.append("duration", leaveDuration.toString());
       formData.append("reason", selectedReason.label);
       formData.append("remarks", remarks);
       formData.append("document_ref_no", documentRefNo);
@@ -179,18 +198,8 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
         formData.append("clinic_id", selectedClinic.clinic_id.toString());
       }
 
-      if (dateRange.start) {
-        formData.append(
-          "start_date",
-          dateRange.start.toISOString().split("T")[0],
-        );
-      }
-      
-      if (!isFullDay && dateRange.start) {
-        formData.append("end_date", dateRange.start.toISOString().split("T")[0]);
-      } else if (dateRange.end) {
-        formData.append("end_date", dateRange.end.toISOString().split("T")[0]);
-      }
+      formData.append("start_date", toApiDate(start));
+      formData.append("end_date", toApiDate(end));
 
       if (attachedDocument) {
         // @ts-ignore
@@ -202,14 +211,18 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       }
 
       const res = await addNewLeave(formData);
-      hideLoader();
       if (res.status === "success") {
+        hideLoader();
+        router.back();
         toast({
           message: "Leave application submitted successfully!",
           variant: "success",
         });
-        router.back();
+        // Reload the store in the background once we've navigated away.
+        void fetchLeaves();
+        void fetchBalances();
       } else {
+        hideLoader();
         toast({
           message: res.message || "Failed to submit application",
           variant: "error",
@@ -242,17 +255,30 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       isDestructive: true,
       onConfirm: async () => {
         showLoader('Cancelling application...');
-        const res = await cancel(id);
-        hideLoader();
-        if (res.success) {
-          hideSheet();
+        try {
+          const res = await cancel(id);
+          if (res.success) {
+            hideLoader();
+            hideSheet();
+            markCancelled(id);
+            toast({
+              message: 'Leave application cancelled successfully',
+              variant: 'success',
+            });
+            // Reconcile with server state in the background after dismissing.
+            void fetchLeaves();
+            void fetchBalances();
+          } else {
+            hideLoader();
+            toast({
+              message: res.error || 'Failed to cancel application',
+              variant: 'error',
+            });
+          }
+        } catch (err: any) {
+          hideLoader();
           toast({
-            message: 'Leave application cancelled successfully',
-            variant: 'success',
-          });
-        } else {
-          toast({
-            message: res.error || 'Failed to cancel application',
+            message: err.message || 'Failed to cancel application',
             variant: 'error',
           });
         }
@@ -375,6 +401,8 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     setDateRange,
     isDatePickerVisible,
     setIsDatePickerVisible,
+    leaveDuration,
+    leaveDurationLabel,
     isFormValid,
     handleSubmit,
   };

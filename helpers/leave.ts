@@ -1,5 +1,18 @@
 import { type LeaveTypeOption } from "../constants/leave";
 
+// Date formatting is centralised in the shared master date helper.
+export {
+  toApiDate,
+  formatLongDate as formatLeaveDate,
+  formatDateRange as formatLeaveDateRange,
+} from "./date";
+
+export const formatLeaveDurationLabel = (days: number): string => {
+  if (!days) return "";
+  if (days === 0.5) return "0.5 Day";
+  return `${days} ${days === 1 ? "Day" : "Days"}`;
+};
+
 export const leaveRequiresClinic = (
   type?: LeaveTypeOption | null,
 ): boolean => !!type?.medical;

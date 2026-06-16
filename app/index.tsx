@@ -94,8 +94,9 @@ export default function Login() {
               maxWidth: 420,
               borderRadius: tokens.radii.xl,
               backgroundColor: theme.colors.surface,
-              padding: tokens.spacing.lg,
-              gap: tokens.spacing.md,
+              paddingVertical: tokens.spacing.md,
+              paddingHorizontal: tokens.spacing.lg,
+              gap: tokens.spacing.sm,
               ...(Platform.OS === "web" && {
                 borderWidth: 1,
                 borderColor: theme.colors.outlineVariant,

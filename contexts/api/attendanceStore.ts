@@ -3,15 +3,12 @@ import {
   Attendance,
   AttendanceError,
   AttendanceStatus,
-  PublicHoliday,
   getAttendanceDef,
-  getPublicHolidays,
   getAttendanceStatusDescription,
 } from './attendance';
 
 interface AttendanceState {
   records: Attendance[];
-  holidays: PublicHoliday[];
   // Status code -> human description, sourced from the API (attStatus.php).
   statusMap: Record<string, string>;
   loading: boolean;
@@ -44,7 +41,6 @@ const loadStatusDescriptions = async (
 
 export const useAttendanceStore = create<AttendanceState>((set) => ({
   records: [],
-  holidays: [],
   statusMap: {},
   loading: false,
   error: null,
@@ -52,16 +48,12 @@ export const useAttendanceStore = create<AttendanceState>((set) => ({
   fetchAttendance: async () => {
     set({ loading: true, error: null });
 
-    const [recordRes, holidayRes] = await Promise.all([
-      getAttendanceDef(),
-      getPublicHolidays(),
-    ]);
+    const recordRes = await getAttendanceDef();
 
     if (recordRes && 'error' in recordRes) {
       set({
         error: (recordRes as AttendanceError).error,
         records: [],
-        holidays: [],
         statusMap: {},
         loading: false,
       });
@@ -69,12 +61,10 @@ export const useAttendanceStore = create<AttendanceState>((set) => ({
     }
 
     const records = recordRes as Attendance[];
-    const holidays = Array.isArray(holidayRes) ? holidayRes : [];
     const statusMap = await loadStatusDescriptions(records);
 
-    set({ records, holidays, statusMap, loading: false });
+    set({ records, statusMap, loading: false });
   },
 
-  clear: () =>
-    set({ records: [], holidays: [], statusMap: {}, loading: false, error: null }),
+  clear: () => set({ records: [], statusMap: {}, loading: false, error: null }),
 }));

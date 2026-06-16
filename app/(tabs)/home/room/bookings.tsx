@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Pressable, RefreshControl, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDesign } from '../../../../contexts/designContext';
@@ -70,43 +70,61 @@ export default function Bookings() {
           showBack 
         />
 
-        <View style={{ flexDirection: 'row', gap: tokens.spacing.sm, marginBottom: tokens.spacing.sm }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 6,
+            padding: 6,
+            borderRadius: 30,
+            backgroundColor: theme.colors.surface,
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.12,
+            shadowRadius: 10,
+            marginBottom: tokens.spacing.sm,
+          }}
+        >
           {BOOKING_FILTERS.map((item) => {
             const active = filter === item.value;
             const color = getStatusColor(item.value);
             return (
-              <TouchableOpacity
+              <Pressable
                 key={item.value}
-                activeOpacity={0.8}
                 onPress={() => setFilter(item.value)}
-                style={{
+                style={({ pressed }) => ({
                   flex: 1,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  height: 40,
-                  borderRadius: tokens.radii.full,
-                  backgroundColor: active ? color : theme.colors.surfaceVariant,
-                  borderWidth: active ? 0 : 1,
-                  borderColor: `${theme.colors.outline}15`,
-                }}
+                  height: 46,
+                  borderRadius: 23,
+                  backgroundColor: active ? color : `${color}14`,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  shadowColor: color,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: active ? 0.35 : 0,
+                  shadowRadius: 8,
+                })}
               >
                 <MaterialCommunityIcons
                   name={item.icon}
-                  size={16}
-                  color={active ? '#FFF' : theme.colors.onSurfaceVariant}
+                  size={18}
+                  color={active ? '#FFF' : color}
                 />
                 <Text
+                  numberOfLines={1}
                   style={{
                     fontSize: 12,
-                    fontWeight: active ? '800' : '600',
-                    color: active ? '#FFF' : theme.colors.onSurfaceVariant,
+                    fontWeight: '800',
+                    color: active ? '#FFF' : color,
                   }}
                 >
                   {item.label}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>

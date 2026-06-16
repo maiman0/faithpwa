@@ -3,7 +3,7 @@ import { TouchableOpacity, View } from "react-native";
 import { Modal, Portal, Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
-import { formatLongDate } from "../helpers/date";
+import { formatLongDate, formatMonthYear, getDateParts } from "../helpers/date";
 
 type Variant = "single" | "range";
 type ViewMode = "Weekly" | "Monthly";
@@ -64,22 +64,16 @@ export function DatePickerContent({
 
   const monthLabel = useMemo(() => {
     if (view === "Monthly") {
-      return currentMonth.toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
-    } else {
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      if (currentWeekStart.getMonth() === weekEnd.getMonth()) {
-        return currentWeekStart.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-      }
-      return `${currentWeekStart.toLocaleDateString("en-US", { month: "long" })} - ${weekEnd.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`;
+      return formatMonthYear(currentMonth);
     }
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    if (currentWeekStart.getMonth() === weekEnd.getMonth()) {
+      return formatMonthYear(currentWeekStart);
+    }
+    const startMonth = getDateParts(currentWeekStart)?.monthLong ?? "";
+    return `${startMonth} - ${formatMonthYear(weekEnd)}`;
   }, [currentMonth, currentWeekStart, view]);
 
   const days = useMemo(() => {
@@ -370,7 +364,7 @@ export function DatePickerContent({
                       fontWeight: selected || inRange ? "700" : "500",
                       color: selected ? theme.colors.onPrimary : inRange ? theme.colors.primary : theme.colors.onSurface,
                     }}>
-                      {date.toLocaleDateString("en-US", { weekday: "long" })}
+                      {getDateParts(date)?.weekdayLong}
                     </Text>
                   </View>
                   {selected && (

@@ -33,15 +33,14 @@ const toneColor = (tone: MetricTone): string => {
 
 export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly" }) {
   const theme = useTheme();
-  const { records, loading, noRecords, describeStatus, getHoliday } = useAttendance();
+  const { records, loading, noRecords, describeStatus } = useAttendance();
   const { spacing, radii, elevation } = design;
 
   const data = useMemo(() => {
     // Map API records to UI format
     return records.map(record => {
       const parts = getDateParts(record.schedule_date);
-      const holiday = getHoliday(record.schedule_date);
-      const statusKey = holiday ? "publicHoliday" : getStatusFromRecord(record);
+      const statusKey = getStatusFromRecord(record);
       const statusInfo = attendanceStatuses[statusKey];
 
       return {
@@ -54,11 +53,11 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
         cardColor: statusInfo.cardColor,
         icon: statusInfo.icon,
         showShift: statusInfo.showShift,
-        message: holiday ? holiday.description : statusInfo.message,
+        message: statusInfo.message,
         detail: buildAttendanceDetail(record),
       };
     }).sort((a, b) => new Date(a.schedule_date).getTime() - new Date(b.schedule_date).getTime());
-  }, [records, describeStatus, getHoliday]);
+  }, [records, describeStatus]);
 
   const recordByDate = useMemo(() => {
     const map = new Map<string, (typeof data)[number]>();

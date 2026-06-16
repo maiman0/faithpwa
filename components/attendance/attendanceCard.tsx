@@ -14,7 +14,7 @@ import { formatFullDate, buildAttendanceDetail } from "../../helpers/attendance"
 export default function AttendanceCard() {
   const { colors } = useTheme();
   const tokens = useDesign();
-  const { records, stats, loading, noRecords, describeStatus, getHoliday } = useAttendance();
+  const { records, stats, loading, noRecords, describeStatus } = useAttendance();
   const { staff } = useStaff();
 
   const dateStr = formatFullDate(new Date());
@@ -105,12 +105,11 @@ export default function AttendanceCard() {
   }
 
   const todayRecord = stats.todayRecord;
-  const holiday = getHoliday(todayRecord?.schedule_date);
-  const statusKey = holiday ? "publicHoliday" : getStatusFromRecord(todayRecord);
+  const statusKey = getStatusFromRecord(todayRecord);
   const status = attendanceStatuses[statusKey];
   const detail = buildAttendanceDetail(todayRecord);
   const statusLabel = describeStatus(todayRecord) || status.label;
-  const statusMessage = holiday ? holiday.description : status.message;
+  const statusMessage = status.message;
 
   return (
     <View

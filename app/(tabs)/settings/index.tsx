@@ -190,6 +190,51 @@ export default function Settings() {
                 color={theme.colors.onPrimaryContainer}
               />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL("https://next-ten-sage-93.vercel.app")
+              }
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: tokens.spacing.sm,
+                padding: tokens.spacing.md,
+                borderRadius: tokens.radii.lg,
+                backgroundColor: theme.colors.secondaryContainer,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="flask-outline"
+                size={24}
+                color={theme.colors.onSecondaryContainer}
+              />
+              <View style={{ flex: 1 }}>
+                <Text
+                  variant="labelLarge"
+                  style={{
+                    color: theme.colors.onSecondaryContainer,
+                    fontWeight: "700",
+                  }}
+                >
+                  Latest Development
+                </Text>
+                <Text
+                  variant="labelSmall"
+                  style={{
+                    color: theme.colors.onSecondaryContainer,
+                    opacity: 0.8,
+                  }}
+                >
+                  next-ten-sage-93.vercel.app
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="open-in-new"
+                size={20}
+                color={theme.colors.onSecondaryContainer}
+              />
+            </TouchableOpacity>
           </View>
 
           <Text

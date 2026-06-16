@@ -46,22 +46,6 @@ export type AttendanceResponse = Attendance[];
 
 export type AttendanceAPIResponse = AttendanceResponse | AttendanceError;
 
-export interface PublicHoliday {
-  holiday_id: number;
-  date: string;
-  description: string;
-  gazetted: string;
-  department_profile_id: string;
-}
-
-export interface PublicHolidayError {
-  error: string;
-}
-
-export type PublicHolidayResponse = PublicHoliday[];
-
-export type PublicHolidayAPIResponse = PublicHolidayResponse | PublicHolidayError;
-
 export interface AttendanceStatus {
   Code: string;
   Description: string;
@@ -81,18 +65,6 @@ export const getAttendanceDef = async (): Promise<AttendanceAPIResponse | Attend
   } catch (error) {
     console.error('Error fetching attendance records:', error);
     return { error: 'Failed to fetch attendance records.' } as AttendanceError;
-  }
-};
-
-export const getPublicHolidays = async (): Promise<
-  PublicHolidayAPIResponse | PublicHolidayError
-> => {
-  try {
-    const response = await api.get<PublicHolidayAPIResponse>('/pholiday.php');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching public holidays:', error);
-    return { error: 'Failed to fetch public holidays.' } as PublicHolidayError;
   }
 };
 

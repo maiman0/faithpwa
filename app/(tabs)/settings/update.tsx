@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import { Button, Card, TextInput, useTheme, ActivityIndicator } from "react-native-paper";
+import { Button, Card, TextInput, HelperText, useTheme, ActivityIndicator } from "react-native-paper";
 import Header from "../../../components/header";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import { useStaff } from "../../../hooks/useStaff";
+import {
+  type ProfileForm,
+  validateProfileForm,
+  isProfileFormValid,
+  sanitizeContactNo,
+} from "../../../helpers/staff";
 
 export default function Update() {
   const theme = useTheme();
@@ -12,7 +18,7 @@ export default function Update() {
   const { setHideTabBar } = useTabs();
   const { staff, updateStaff, loading } = useStaff();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     nick_name: "",
     email: "",
     contact_no: "",
@@ -20,6 +26,7 @@ export default function Update() {
     address2: "",
     address3: "",
   });
+  const [touched, setTouched] = useState<Partial<Record<keyof ProfileForm, boolean>>>({});
 
   useEffect(() => {
     if (staff) {
@@ -34,6 +41,13 @@ export default function Update() {
     }
   }, [staff]);
 
+  const errors = useMemo(() => validateProfileForm(form), [form]);
+
+  const updateField = (field: keyof ProfileForm, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
   const hasChanges = useMemo(() => {
     if (!staff) return false;
     return (
@@ -46,13 +60,23 @@ export default function Update() {
     );
   }, [form, staff]);
 
+  const canSave = hasChanges && isProfileFormValid(form);
+
   useEffect(() => {
     setHideTabBar(true);
     return () => setHideTabBar(false);
   }, []);
 
   const handleSave = () => {
-    updateStaff(form);
+    if (!canSave) return;
+    updateStaff({
+      nick_name: form.nick_name.trim(),
+      email: form.email.trim(),
+      contact_no: form.contact_no.trim(),
+      address1: form.address1.trim(),
+      address2: form.address2.trim(),
+      address3: form.address3.trim(),
+    });
   };
 
   if (loading && !staff) {
@@ -101,77 +125,86 @@ export default function Update() {
                 gap: tokens.spacing.md,
               }}
             >
-              <View style={{ gap: tokens.spacing.lg }}>
-                <View style={{ gap: tokens.spacing.md }}>
+              <View style={{ gap: tokens.spacing.md }}>
+                <View>
                   <TextInput
                     mode="outlined"
                     label="Nickname"
                     value={form.nick_name}
-                    onChangeText={(val) => setForm({ ...form, nick_name: val })}
-                    outlineStyle={{
-                      borderRadius: tokens.radii.lg,
-                    }}
+                    onChangeText={(val) => updateField("nick_name", val)}
+                    error={!!(touched.nick_name && errors.nick_name)}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
+                  {touched.nick_name && errors.nick_name ? (
+                    <HelperText type="error">{errors.nick_name}</HelperText>
+                  ) : null}
+                </View>
 
+                <View>
                   <TextInput
                     mode="outlined"
                     label="Email Address"
                     value={form.email}
-                    onChangeText={(val) => setForm({ ...form, email: val })}
+                    onChangeText={(val) => updateField("email", val)}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    outlineStyle={{
-                      borderRadius: tokens.radii.lg,
-                    }}
+                    error={!!(touched.email && errors.email)}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
+                  {touched.email && errors.email ? (
+                    <HelperText type="error">{errors.email}</HelperText>
+                  ) : null}
+                </View>
 
+                <View>
                   <TextInput
                     mode="outlined"
                     label="Contact Number"
                     value={form.contact_no}
-                    onChangeText={(val) => setForm({ ...form, contact_no: val })}
+                    onChangeText={(val) => updateField("contact_no", sanitizeContactNo(val))}
                     keyboardType="phone-pad"
-                    outlineStyle={{
-                      borderRadius: tokens.radii.lg,
-                    }}
+                    error={!!(touched.contact_no && errors.contact_no)}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
                   />
-                  <View style={{ gap: tokens.spacing.md }}>
-                    <TextInput
-                      mode="outlined"
-                      label="Address Line 1"
-                      value={form.address1}
-                      onChangeText={(val) => setForm({ ...form, address1: val })}
-                      outlineStyle={{
-                        borderRadius: tokens.radii.lg,
-                      }}
-                    />
-
-                    <TextInput
-                      mode="outlined"
-                      label="Address Line 2"
-                      value={form.address2}
-                      onChangeText={(val) => setForm({ ...form, address2: val })}
-                      outlineStyle={{
-                        borderRadius: tokens.radii.lg,
-                      }}
-                    />
-
-                    <TextInput
-                      mode="outlined"
-                      label="Address Line 3"
-                      value={form.address3}
-                      onChangeText={(val) => setForm({ ...form, address3: val })}
-                      outlineStyle={{
-                        borderRadius: tokens.radii.lg,
-                      }}
-                    />
-                  </View>
+                  {touched.contact_no && errors.contact_no ? (
+                    <HelperText type="error">{errors.contact_no}</HelperText>
+                  ) : null}
                 </View>
+
+                <View>
+                  <TextInput
+                    mode="outlined"
+                    label="Address Line 1"
+                    value={form.address1}
+                    onChangeText={(val) => updateField("address1", val)}
+                    error={!!(touched.address1 && errors.address1)}
+                    outlineStyle={{ borderRadius: tokens.radii.lg }}
+                  />
+                  {touched.address1 && errors.address1 ? (
+                    <HelperText type="error">{errors.address1}</HelperText>
+                  ) : null}
+                </View>
+
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 2 (Optional)"
+                  value={form.address2}
+                  onChangeText={(val) => updateField("address2", val)}
+                  outlineStyle={{ borderRadius: tokens.radii.lg }}
+                />
+
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 3 (Optional)"
+                  value={form.address3}
+                  onChangeText={(val) => updateField("address3", val)}
+                  outlineStyle={{ borderRadius: tokens.radii.lg }}
+                />
               </View>
 
               <Button
                 mode="contained"
-                disabled={!hasChanges}
+                disabled={!canSave}
                 onPress={handleSave}
                 style={{
                   borderRadius: tokens.radii.full,

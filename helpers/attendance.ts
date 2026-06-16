@@ -2,7 +2,7 @@
 export * from "./date";
 
 import { formatTime, formatWorkedHours, toDateKey } from "./date";
-import type { Attendance, PublicHoliday } from "../contexts/api/attendance";
+import type { Attendance } from "../contexts/api/attendance";
 
 export type MetricTone = "positive" | "warning" | "negative" | "neutral";
 export type ClockState = "recorded" | "pending" | "missed";
@@ -131,13 +131,4 @@ export const buildAttendanceDetail = (
         ? formatWorkedHours(record?.actual_login, record?.actual_logout, "--")
         : "--",
   };
-};
-
-export const findHoliday = (
-  holidays: PublicHoliday[],
-  scheduleDate?: string | null,
-): PublicHoliday | null => {
-  const key = toDateKey(scheduleDate);
-  if (!key) return null;
-  return holidays.find((h) => toDateKey(h.date) === key) ?? null;
 };

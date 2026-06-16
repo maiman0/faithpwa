@@ -33,7 +33,19 @@ export const useStaffStore = create<StaffStore>((set, get) => ({
 
   updateStaff: async (data) => {
     try {
-      await updateStaffDetails(data);
+      const current = get().staff;
+      // Send a COMPLETE record so the backend keeps all required identifiers
+      // (staff_id, staff_no, ...) and never blanks the fields the form doesn't
+      // manage. Server-derived aggregates are dropped so they get recomputed
+      // from the edited values rather than persisted stale.
+      const payload: Partial<StaffResponse> = { ...(current ?? {}), ...data };
+      delete payload.full_name;
+      delete payload.full_address;
+      delete payload.initials;
+      delete payload.by_name;
+      delete payload.error;
+
+      await updateStaffDetails(payload);
       const updated = await getStaffDetails();
       set({ staff: updated });
       return { success: true };

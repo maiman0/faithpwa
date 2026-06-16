@@ -82,19 +82,19 @@ export default function RoomBento() {
                 {parts?.weekday} {parts?.day}
               </Text>
               <Text style={{ fontSize: 16, fontWeight: "600", color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-                {parts?.month} {parts?.year} • Availability
+                {parts?.monthLong} {parts?.year} • Availability
               </Text>
             </View>
           </View>
 
-          <View style={{ 
-            backgroundColor: "rgba(255,255,255,0.2)", 
-            paddingHorizontal: 16, 
-            paddingVertical: 10, 
+          <View style={{
+            backgroundColor: "rgba(255,255,255,0.2)",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
             borderRadius: radii.full,
             flexDirection: "row",
             alignItems: "center",
-            alignSelf: "flex-start",
+            alignSelf: "flex-end",
             gap: 8
           }}>
             <MaterialCommunityIcons name="calendar-edit" size={16} color="#FFF" />

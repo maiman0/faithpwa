@@ -4,6 +4,7 @@ import { Card, Text, Chip, useTheme, IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../../contexts/designContext";
 import { Room } from "../../contexts/api/room";
+import { roomImageUrl } from "../../helpers/room";
 
 type RoomListProps = {
   rooms: Room[];
@@ -116,7 +117,7 @@ export default function RoomList({ rooms, onRoomPress }: RoomListProps) {
 
       <View style={{ gap: tokens.spacing.sm }}>
         {filteredRooms.map((room) => {
-          const imageUrl = `https://endpoint.daythree.ai/faithMobile/room/${room.room_id}.jpeg`;
+          const imageUrl = roomImageUrl(room.room_id);
 
           return (
             <Card
@@ -132,7 +133,7 @@ export default function RoomList({ rooms, onRoomPress }: RoomListProps) {
             >
               <View style={{ flexDirection: 'row', padding: tokens.spacing.sm, gap: tokens.spacing.md }}>
                 <ImageBackground
-                  source={{ uri: imageUrl }}
+                  source={{ uri: imageUrl ?? undefined }}
                   style={{ 
                     width: 80, 
                     height: 80, 

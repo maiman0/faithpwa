@@ -7,6 +7,8 @@ import { design } from "../../constants/design";
 import { useOverlay } from "../../contexts/overlayContext";
 import { DatePickerContent } from "../datePicker";
 import { useRoom } from "../../hooks/useRoom";
+import { parseDate, getDateParts, toApiDate } from "../../helpers/date";
+import { formatRoomDateMedium } from "../../helpers/room";
 
 export default function RoomBento() {
   const theme = useTheme();
@@ -15,16 +17,11 @@ export default function RoomBento() {
   const { stats, selectedDate, setSelectedDate } = useRoom();
   const { spacing, radii } = design;
 
-  // Convert YYYY-MM-DD from store to display format
-  const dateValue = useMemo(() => new Date(selectedDate), [selectedDate]);
-  const formattedDate = useMemo(() => {
-    return dateValue.toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }, [dateValue]);
+  const dateValue = useMemo(
+    () => parseDate(selectedDate) ?? new Date(),
+    [selectedDate],
+  );
+  const parts = useMemo(() => getDateParts(selectedDate), [selectedDate]);
 
   const handleDatePicker = () => {
     showModal({
@@ -37,32 +34,20 @@ export default function RoomBento() {
           onChange={(date) => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (date < today) {
               toast("Cannot select past date");
               return;
             }
 
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            setSelectedDate(`${yyyy}-${mm}-${dd}`);
-            
-            const formatted = date.toLocaleDateString("en-GB", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            });
-            toast(`Date changed to ${formatted}`);
+            setSelectedDate(toApiDate(date));
+            toast(`Date changed to ${formatRoomDateMedium(date)}`);
           }}
           onConfirm={hideModal}
         />
       ),
     });
   };
-
-  const [weekday, dayMonth, year] = formattedDate.replace(",", "").split(" ");
 
   return (
     <View style={{ gap: spacing.md }}>
@@ -94,10 +79,10 @@ export default function RoomBento() {
             
             <View style={{ marginTop: spacing.md }}>
               <Text style={{ fontSize: 38, fontWeight: "900", color: "#FFF", lineHeight: 42 }}>
-                {weekday} {dayMonth}
+                {parts?.weekday} {parts?.day}
               </Text>
               <Text style={{ fontSize: 16, fontWeight: "600", color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-                {year} • Availability
+                {parts?.month} {parts?.year} • Availability
               </Text>
             </View>
           </View>

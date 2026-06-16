@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { View } from 'react-native';
-import { Text, Divider, Button, useTheme } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Text, Button, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useRoomStore } from '../contexts/api/roomStore';
 import { getRoomAvailabilityByDay, type BookingItem, type Room } from '../contexts/api/room';
 import { useOverlay } from '../contexts/overlayContext';
 import { useStaff } from './useStaff';
+import {
+  todayApiDate,
+  formatRoomDateFull,
+  formatRoomDateLong,
+  formatRoomTimeRange,
+  roomImageUrl,
+} from '../helpers/room';
+import ReservationSummary from '../components/room/reservationSummary';
 
 export type TimeSlot = {
   label: string;
@@ -39,6 +46,7 @@ export const useRoom = () => {
     
     createBooking,
     cancelBooking: apiCancelBooking,
+    resetBookingFlow,
     clear,
   } = useRoomStore();
 
@@ -109,29 +117,27 @@ export const useRoom = () => {
         staff?.email || ""
       );
 
-      // We wait for the store's loading state to settle
       hideLoader();
 
       if ('error' in res) {
-        toast({ message: res.error, variant: 'error' });
-        return res;
-      } else {
-        // Close sheet immediately
-        onSuccess?.();
-        
-        // Delay toast slightly to allow loader to dismiss and navigate
-        setTimeout(() => {
-          toast({ message: "Room booked successfully!", variant: 'success' });
-          router.replace('/home/room/bookings');
-        }, 300);
+        toast({ message: res.error || "Failed to book room", variant: 'error' });
         return res;
       }
+
+      // Navigate away first so the booking form never flashes its empty state,
+      // then reset the flow and refresh the list in the background.
+      onSuccess?.();
+      router.replace('/home/room/bookings');
+      toast({ message: "Room booked successfully!", variant: 'success' });
+      void fetchBookings();
+      resetBookingFlow();
+      return res;
     } catch (err: any) {
       hideLoader();
       toast({ message: err.message || "Failed to book room", variant: 'error' });
       return { error: err.message };
     }
-  }, [getBookingPayload, showLoader, createBooking, staff, hideLoader, toast, router]);
+  }, [getBookingPayload, showLoader, createBooking, staff, hideLoader, toast, router, fetchBookings, resetBookingFlow]);
 
   const handleCancel = useCallback((booking: BookingItem) => {
     confirm({
@@ -146,16 +152,14 @@ export const useRoom = () => {
           hideLoader();
           if (res.execute_success) {
             hideSheet();
-            setTimeout(() => {
-                toast({
-                    message: "Booking cancelled successfully",
-                    variant: "success"
-                });
-            }, 300);
+            toast({
+              message: "Booking cancelled successfully",
+              variant: "success",
+            });
           } else {
             toast({
-                message: "Failed to cancel booking",
-                variant: "error"
+              message: "Failed to cancel booking",
+              variant: "error",
             });
           }
         } catch (err) {
@@ -171,42 +175,23 @@ export const useRoom = () => {
 
   const showBookingDetails = useCallback((booking: BookingItem) => {
     const isUpcoming = booking.Tag === 'Upcoming';
-    
+    const statusColor =
+      booking.Tag === 'Upcoming' ? '#3B82F6' : booking.Tag === 'Cancelled' ? '#EF4444' : '#10B981';
+    const room = rooms.find((r) => r.Room_Name === booking.Room_Name);
+
     showSheet({
       content: (
         <View style={{ gap: 20, paddingBottom: 20 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View style={{ 
-              backgroundColor: booking.Tag === 'Upcoming' ? '#3B82F620' : booking.Tag === 'Cancelled' ? '#EF444420' : '#10B98120', 
-              padding: 12, 
-              borderRadius: 16 
-            }}>
-              <MaterialCommunityIcons 
-                name={booking.Tag === 'Upcoming' ? "calendar-clock" : booking.Tag === 'Cancelled' ? "calendar-remove" : "calendar-check"} 
-                size={32} 
-                color={booking.Tag === 'Upcoming' ? '#3B82F6' : booking.Tag === 'Cancelled' ? '#EF4444' : '#10B981'} 
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text variant="titleLarge" style={{ fontWeight: "800" }}>{booking.Room_Name}</Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{booking.Booking_Num} • {booking.Tag}</Text>
-            </View>
-          </View>
-
-          <Divider />
-
-          <View style={{ gap: 8 }}>
-            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "700" }}>TIME & LOCATION</Text>
-            <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                {new Date(booking.Start_Date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Text>
-            <Text variant="bodyLarge">
-                {new Date(booking.Start_Date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(booking.End_Date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {booking.Tower} • {booking.Level}
-            </Text>
-          </View>
+          <ReservationSummary
+            imageUrl={roomImageUrl(room?.room_id)}
+            roomName={booking.Room_Name}
+            dateLabel={formatRoomDateLong(booking.Start_Date)}
+            timeLabel={formatRoomTimeRange(booking.Start_Date, booking.End_Date)}
+            locationLabel={`${booking.Tower} • ${booking.Level}`}
+            reference={booking.Booking_Num}
+            statusLabel={booking.Tag}
+            statusColor={statusColor}
+          />
 
           <View style={{ gap: 8 }}>
             <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "700" }}>PURPOSE</Text>
@@ -216,8 +201,8 @@ export const useRoom = () => {
           </View>
 
           {isUpcoming && (
-            <Button 
-              mode="contained-tonal" 
+            <Button
+              mode="contained-tonal"
               onPress={() => handleCancel(booking)}
               style={{ marginTop: 8, borderRadius: 12 }}
               buttonColor={theme.colors.errorContainer}
@@ -230,7 +215,7 @@ export const useRoom = () => {
         </View>
       )
     });
-  }, [showSheet, theme, handleCancel]);
+  }, [showSheet, theme, handleCancel, rooms]);
 
   const prepareBooking = useCallback(async (room: Room) => {
     showLoader(`Checking availability for ${room.Room_Name}...`);
@@ -250,8 +235,7 @@ export const useRoom = () => {
       setPurpose("");
 
       const now = new Date();
-      const localToday = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      const isToday = selectedDate === localToday;
+      const isToday = selectedDate === todayApiDate();
 
       const allSlots: TimeSlot[] = Object.entries(res.availability)
         .map(([timeRange, data]) => {
@@ -315,14 +299,10 @@ export const useRoom = () => {
     }, 250);
   }, [hideSheet, router]);
 
-  const formattedDate = useMemo(() => {
-    return new Date(selectedDate).toLocaleDateString('en-GB', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-    });
-  }, [selectedDate]);
+  const formattedDate = useMemo(
+    () => formatRoomDateFull(selectedDate),
+    [selectedDate],
+  );
 
   return {
     rooms,

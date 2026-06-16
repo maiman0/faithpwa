@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, ScrollView, ImageBackground } from 'react-native';
-import { Text, Button, useTheme, TextInput, Card } from 'react-native-paper';
+import { View, ScrollView } from 'react-native';
+import { Text, Button, useTheme, TextInput } from 'react-native-paper';
 import { useDesign } from '../../../../contexts/designContext';
 import { useRoom } from '../../../../hooks/useRoom';
+import { roomImageUrl } from '../../../../helpers/room';
 import Header from '../../../../components/header';
+import ReservationSummary from '../../../../components/room/reservationSummary';
 
 export default function BookRoom() {
   const theme = useTheme();
@@ -22,7 +24,7 @@ export default function BookRoom() {
     router
   } = useRoom();
 
-  const imageUrl = selectedRoom ? `https://endpoint.daythree.ai/faithMobile/room/${selectedRoom.room_id}.jpeg` : null;
+  const imageUrl = roomImageUrl(selectedRoom?.room_id);
 
   const bookingSummary = React.useMemo(() => {
     if (selectedSlots.length === 0) return null;
@@ -55,35 +57,13 @@ export default function BookRoom() {
           showBack 
         />
 
-        <Card mode="contained" style={{ backgroundColor: theme.colors.primaryContainer + "20", borderRadius: tokens.radii.xl }}>
-            <Card.Content style={{ flexDirection: 'row', gap: tokens.spacing.md, padding: tokens.spacing.sm }}>
-                {imageUrl && (
-                    <ImageBackground
-                        source={{ uri: imageUrl }}
-                        style={{ 
-                            width: 100, 
-                            height: 100, 
-                            borderRadius: tokens.radii.lg, 
-                            overflow: 'hidden',
-                            backgroundColor: theme.colors.surfaceVariant
-                        }}
-                    />
-                )}
-                <View style={{ flex: 1, justifyContent: 'center', gap: 2 }}>
-                    <Text variant="labelMedium" style={{ color: theme.colors.primary, fontWeight: '800' }}>RESERVATION SUMMARY</Text>
-                    <Text variant="titleLarge" style={{ fontWeight: '900' }}>{selectedRoom?.Room_Name}</Text>
-                    <Text variant="bodyMedium" style={{ fontWeight: '700', color: theme.colors.onSurfaceVariant }}>
-                        {formattedDate}
-                    </Text>
-                    <Text variant="bodyMedium" style={{ fontWeight: '700', color: theme.colors.onSurfaceVariant }}>
-                        {bookingSummary?.start} - {bookingSummary?.end}
-                    </Text>
-                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                        {selectedRoom?.Tower} • {selectedRoom?.Level}
-                    </Text>
-                </View>
-            </Card.Content>
-        </Card>
+        <ReservationSummary
+          imageUrl={imageUrl}
+          roomName={selectedRoom?.Room_Name}
+          dateLabel={formattedDate}
+          timeLabel={bookingSummary ? `${bookingSummary.start} - ${bookingSummary.end}` : ""}
+          locationLabel={`${selectedRoom?.Tower} • ${selectedRoom?.Level}`}
+        />
 
         <View style={{ gap: tokens.spacing.lg }}>
             <View style={{ gap: 8 }}>

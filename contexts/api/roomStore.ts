@@ -10,6 +10,7 @@ import {
   ErrorResponse,
   CancelBookingResponse,
 } from './room';
+import { todayApiDate } from '../../helpers/room';
 
 interface RoomState {
   rooms: Room[];
@@ -46,13 +47,14 @@ interface RoomState {
   ) => Promise<BookingResponse | ErrorResponse>;
 
   cancelBooking: (bookingNumber: string) => Promise<CancelBookingResponse>;
+  resetBookingFlow: () => void;
   clear: () => void;
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
   rooms: [],
   myBookings: [],
-  selectedDate: new Date().toLocaleDateString('en-CA'),
+  selectedDate: todayApiDate(),
   loading: false,
   error: null,
 
@@ -120,13 +122,9 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       PIC,
       email,
     );
-    if ('error' in res) {
-      set({ error: res.error, loading: false });
-    } else {
-      set({ error: null, selectedSlots: [], purpose: "", selectedRoom: null });
-      await get().fetchBookings();
-    }
-    set({ loading: false });
+    // Keep the booking flow state intact here — the hook navigates first, then
+    // resets the form + refetches in the background to avoid a null-state flash.
+    set({ error: 'error' in res ? res.error : null, loading: false });
     return res;
   },
 
@@ -142,6 +140,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     set({ loading: false });
     return res;
   },
+
+  resetBookingFlow: () => set({ selectedRoom: null, selectedSlots: [], purpose: "" }),
 
   clear: () => set({ rooms: [], myBookings: [], loading: false, error: null, selectedSlots: [], purpose: "", selectedRoom: null }),
 }));

@@ -42,6 +42,7 @@ export interface DateParts {
   day: number;
   month: string;
   monthLong: string;
+  year: number;
 }
 
 export const getDateParts = (value?: string | Date | null): DateParts | null => {
@@ -55,6 +56,7 @@ export const getDateParts = (value?: string | Date | null): DateParts | null => 
     day: d.getDate(),
     month: d.toLocaleDateString("en-US", { month: "short" }),
     monthLong: d.toLocaleDateString("en-US", { month: "long" }),
+    year: d.getFullYear(),
   };
 };
 
@@ -81,6 +83,31 @@ export const formatFullDate = (
     day: "numeric",
     month: "long",
   });
+};
+
+// "Monday, 15 June 2026"
+export const formatFullDateYear = (
+  value?: string | Date | null,
+  fallback = "--",
+): string => {
+  const d = toDate(value);
+  if (!d) return fallback;
+  return d.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+// Local-time clock from a date or datetime value: "9:00 AM"
+export const formatClockTime = (
+  value?: string | Date | null,
+  fallback = "--:--",
+): string => {
+  const d = toDate(value);
+  if (!d) return fallback;
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 };
 
 // "Mon, 15 Jun"

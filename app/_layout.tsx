@@ -113,6 +113,10 @@ function AppContent({ fontsLoaded }: { fontsLoaded: boolean }) {
       if (!meta) {
         meta = document.createElement("meta");
         meta.setAttribute("name", "theme-color");
+        // Only theme the bar in the installed (standalone) app. In a browser
+        // this would tint the URL/search bar with the app background, which we
+        // don't want — leave the browser's own chrome untouched.
+        meta.setAttribute("media", "(display-mode: standalone)");
         document.getElementsByTagName("head")[0].appendChild(meta);
       }
       const metaColor = isOverlayActive ? "#9c9ea0" : theme.colors.background;

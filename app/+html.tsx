@@ -54,6 +54,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
         />
         <meta name="apple-mobile-web-app-title" content="Our Companion" />
 
+        {/* App icons (manifest = Android/desktop install + icons;
+            apple-touch-icon = iOS home screen; icon = browser tab) */}
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: baseStyle }} />
       </head>

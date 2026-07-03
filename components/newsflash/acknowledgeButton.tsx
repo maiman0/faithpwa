@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Animated, Pressable } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "../../constants/icon";
 import { useDesign } from "../../contexts/designContext";
 
 type Props = {
@@ -74,7 +75,7 @@ export default function AcknowledgeButton({
     ? "ACKNOWLEDGE MEMO"
     : `READING • ${secondsLeft}s`;
 
-  const icon = acknowledged
+  const icon: IconName = acknowledged
     ? "check-bold"
     : ready
     ? "check-circle"
@@ -108,7 +109,7 @@ export default function AcknowledgeButton({
       )}
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
-        <MaterialCommunityIcons name={icon as any} size={18} color={foreground} />
+        <MaterialCommunityIcons name={icon} size={18} color={foreground} />
         <Text style={{ color: foreground, fontWeight: "800", letterSpacing: 0.5 }}>
           {label}
         </Text>

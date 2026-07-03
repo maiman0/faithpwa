@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import { Text, useTheme, Avatar, Divider } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "../constants/icon";
 import { useDesign } from "../contexts/designContext";
 
 type TailProps = {
@@ -26,7 +27,7 @@ export default function Tail({
   const theme = useTheme();
   const tokens = useDesign();
 
-  const details = [
+  const details: { label: string; value: string; icon: IconName }[] = [
     {
       label: "Full Name",
       value: fullName,
@@ -156,7 +157,7 @@ export default function Tail({
                 }}
               >
                 <MaterialCommunityIcons
-                  name={item.icon as any}
+                  name={item.icon}
                   size={18}
                   color={theme.colors.primary}
                 />

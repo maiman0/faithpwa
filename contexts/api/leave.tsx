@@ -1,4 +1,5 @@
 import api from './api';
+import { getErrorMessage } from '../../helpers/error';
 
 export type Leave = {
   leave_id: number;
@@ -57,8 +58,8 @@ export const getLeaveRecords = async (): Promise<Leave[]> => {
     }
 
     return [];
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Failed to fetch leave records';
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, 'Failed to fetch leave records');
     console.error('Error fetching leave records:', message);
     throw new Error(message);
   }
@@ -77,9 +78,8 @@ export const applyLeave = async (formData: FormData): Promise<LeaveResponse> => 
       leave_id: data.leave_id,
       data: data.data,
     };
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Failed to submit leave application';
-    throw new Error(message);
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to submit leave application'));
   }
 };
 
@@ -93,9 +93,8 @@ export const cancelLeaveRequest = async (leave_id: number): Promise<LeaveRespons
       status: isMutationOk(data) ? 'success' : 'error',
       message: data.message || data.error,
     };
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Failed to cancel leave';
-    throw new Error(message);
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to cancel leave'));
   }
 };
 

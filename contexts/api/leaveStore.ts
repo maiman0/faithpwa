@@ -7,6 +7,7 @@ import {
   type LeaveResponse
 } from './leave';
 import { getAllLeaveBalances, type LeaveBalanceItem } from './balance';
+import { getErrorMessage } from '../../helpers/error';
 
 type LeaveStore = {
   leaves: Leave[];
@@ -32,8 +33,8 @@ export const useLeaveStore = create<LeaveStore>((set) => ({
     try {
       const data = await getLeaveRecords();
       set({ leaves: data, error: null });
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      set({ error: getErrorMessage(e, 'Failed to fetch leave records') });
     } finally {
       set({ loading: false });
     }
@@ -48,16 +49,16 @@ export const useLeaveStore = create<LeaveStore>((set) => ({
       } else {
         set({ balances: data, error: null });
       }
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      set({ error: getErrorMessage(e, 'Failed to fetch leave balances') });
     }
   },
 
   addNewLeave: async (formData) => {
     try {
       return await applyLeave(formData);
-    } catch (e: any) {
-      return { status: 'error', message: e.message };
+    } catch (e: unknown) {
+      return { status: 'error', message: getErrorMessage(e, 'Failed to submit leave application') };
     }
   },
 
@@ -68,8 +69,8 @@ export const useLeaveStore = create<LeaveStore>((set) => ({
         return { success: true };
       }
       return { success: false, error: res.message };
-    } catch (e: any) {
-      return { success: false, error: e.message };
+    } catch (e: unknown) {
+      return { success: false, error: getErrorMessage(e, 'Failed to cancel leave') };
     }
   },
 

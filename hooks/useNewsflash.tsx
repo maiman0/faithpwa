@@ -91,7 +91,7 @@ export const useNewsflash = (limit?: number) => {
               }}
             >
               <MaterialCommunityIcons
-                name={priority.icon as any}
+                name={priority.icon}
                 size={32}
                 color={priority.color}
               />

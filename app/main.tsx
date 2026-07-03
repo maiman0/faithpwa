@@ -17,6 +17,7 @@ import {
 } from "react-native-paper";
 import { useDesign } from "../contexts/designContext";
 import { useOverlay } from "../contexts/overlayContext";
+import { ToastVariant } from "../components/overlay/toast";
 import Header from "../components/header";
 import ScrollTop from "../components/scrollTop";
 import NoData from "../components/noData";
@@ -108,7 +109,7 @@ export default function OverlayDemo() {
     });
   };
 
-  const handleToast = (variant: any = "default") => {
+  const handleToast = (variant: ToastVariant = "default") => {
     const messages = {
       success: "Changes saved successfully!",
       error: "Failed to update record.",

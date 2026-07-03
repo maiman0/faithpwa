@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 This mirrors the in-app changelog shown in Settings → About → "What's New"
 (`constants/about.ts`). Update both together.
 
+## [0.7.0] - 2026-07-03
+
+- Internal: eliminated all `any` types across the codebase — added a shared `IconName` type (constants/icon.ts) for MaterialCommunityIcons names, a shared `getErrorMessage` helper (helpers/error.ts) for typed error narrowing in API/hook catch blocks, and typed `Href` route data instead of casting
+
+## [0.6.0] - 2026-07-03
+
+- Login screen: reduced overall card height with a smaller logo, tighter spacing, and compact input fields
+- Removed the fake clock from the desktop browser device-frame mockup's status bar
+- Production web build now ships PWA install tags (manifest link, apple-touch-icon, viewport-fit=cover) that were previously silently dropped from the exported HTML
+- Removed the internal-only "Latest Development" preview link from Settings → About
+- Updated Expo SDK dependencies to their expected patch versions
+
 ## [0.5.0] - 2026-07-03
 
 - Session restore failures on app launch now show an error toast instead of failing silently

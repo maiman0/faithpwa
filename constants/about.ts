@@ -5,9 +5,27 @@ export interface ChangelogEntry {
 }
 
 export const APP_NAME = "FAITH Workspace";
-export const APP_VERSION = "0.5.0";
+export const APP_VERSION = "0.7.0";
 
 export const changelog: ChangelogEntry[] = [
+  {
+    version: "0.7.0",
+    date: "2026-07-03",
+    changes: [
+      "Internal: removed all `any` types from the codebase in favor of proper typing (icon names, route hrefs, and API error handling)",
+    ],
+  },
+  {
+    version: "0.6.0",
+    date: "2026-07-03",
+    changes: [
+      "Login screen: reduced overall card height with a smaller logo, tighter spacing, and compact input fields",
+      "Removed the fake clock from the desktop browser device-frame mockup's status bar",
+      "Production web build now ships PWA install tags (manifest link, apple-touch-icon, viewport-fit=cover) that were previously silently dropped from the exported HTML",
+      "Removed the internal-only \"Latest Development\" preview link from Settings → About",
+      "Updated Expo SDK dependencies to their expected patch versions",
+    ],
+  },
   {
     version: "0.5.0",
     date: "2026-07-03",

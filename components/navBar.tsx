@@ -1,13 +1,48 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, View, Pressable, Easing, Platform } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-import { usePathname, router } from "expo-router";
+import { usePathname, router, Href } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
 import { useTabs } from "../contexts/tabContext";
 import { useOverlay } from "../contexts/overlayContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "../constants/icon";
 import PickerModal from "./pickerModal";
+
+type QuickAction = {
+  id: string;
+  label: string;
+  route: Href;
+  icon: IconName;
+};
+
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    id: "attendance",
+    label: "Manage Attendance",
+    route: "home/attendance",
+    icon: "calendar-check",
+  },
+  {
+    id: "leave",
+    label: "Apply Leave",
+    route: "home/leave",
+    icon: "calendar-remove",
+  },
+  {
+    id: "room",
+    label: "Check Room Availability",
+    route: "home/room",
+    icon: "door-sliding",
+  },
+  {
+    id: "update",
+    label: "Update Details",
+    route: "settings/update",
+    icon: "account-edit-outline",
+  },
+];
 
 export function NavBar() {
   const theme = useTheme();
@@ -51,32 +86,7 @@ export function NavBar() {
         content: (
           <PickerModal
             title="Quick Actions"
-            data={[
-              {
-                id: "attendance",
-                label: "Manage Attendance",
-                route: "home/attendance",
-                icon: "calendar-check",
-              },
-              {
-                id: "leave",
-                label: "Apply Leave",
-                route: "home/leave",
-                icon: "calendar-remove",
-              },
-              {
-                id: "room",
-                label: "Check Room Availability",
-                route: "home/room",
-                icon: "door-sliding",
-              },
-              {
-                id: "update",
-                label: "Update Details",
-                route: "settings/update",
-                icon: "account-edit-outline",
-              },
-            ]}
+            data={QUICK_ACTIONS}
             onSelect={(item) => {
               hideModal();
               if (item.id === "update") {
@@ -84,18 +94,18 @@ export function NavBar() {
                 router.push("/settings/update");
               } else if (item.id === "leave") {
                 // Route to index first
-                router.push("home/leave" as any);
+                router.push("home/leave");
                 // 1 sec delay then to apply page
                 setTimeout(() => {
-                  router.push("home/leave/apply" as any);
+                  router.push("home/leave/apply");
                 }, 100);
               } else {
-                router.push(item.route as any);
+                router.push(item.route);
               }
             }}
             keyExtractor={(item) => item.id}
             labelExtractor={(item) => item.label}
-            iconExtractor={(item) => item.icon as any}
+            iconExtractor={(item) => item.icon}
           />
         ),
       });
@@ -106,12 +116,12 @@ export function NavBar() {
     signOut();
   };
 
-  const navigateTo = (route: string) => {
+  const navigateTo = (route: Href) => {
     if (pathname === route || pathname === `/(tabs)${route}`) return;
-    router.navigate(route as any);
+    router.navigate(route);
   };
 
-  const navItems = [
+  const navItems: { key: string; label: string; icon: IconName; active: boolean; onPress: () => void }[] = [
     {
       key: "home",
       label: "Home",
@@ -169,7 +179,7 @@ export function NavBar() {
             })}
           >
             <MaterialCommunityIcons
-              name={item.icon as any}
+              name={item.icon}
               size={item.active ? 26 : 22}
               color={
                 item.active

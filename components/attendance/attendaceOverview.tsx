@@ -68,7 +68,7 @@ export default function AttendanceOverview({ view }: { view: "Weekly" | "Monthly
     return map;
   }, [data]);
 
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<(typeof data)[number] | null>(null);
 
   useEffect(() => {
     if (data.length > 0 && !selected) {

@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "./icon";
 
 export type AttendanceStatus = "Present" | "Late" | "Absent" | "Leave" | "Weekend";
 
@@ -8,7 +8,7 @@ export const attendanceStatuses: Record<
     label: string;
     dotColor: string;
     cardColor: string;
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon: IconName;
     message?: string;
     showShift: boolean;
   }
@@ -83,7 +83,12 @@ export const attendanceStatuses: Record<
   },
 };
 
-export const getStatusFromRecord = (record: any) => {
+type AttendanceRecordLike = {
+  status?: string | null;
+  login_status?: string | null;
+};
+
+export const getStatusFromRecord = (record: AttendanceRecordLike | null | undefined) => {
   if (!record) return "working";
 
   // Map API status codes

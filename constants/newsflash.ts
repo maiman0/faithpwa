@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "./icon";
 
 export type NewsflashPriority = "Critical" | "Important" | "Normal";
 
@@ -15,7 +15,7 @@ export const newsflashPriorities: Record<
     label: string;
     color: string;
     cardColor: string;
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon: IconName;
   }
 > = {
   Critical: {

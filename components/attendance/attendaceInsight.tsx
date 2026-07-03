@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "../../constants/icon";
 import { design } from "../../constants/design";
 import { useAttendance } from "../../hooks/useAttendance";
 
@@ -50,9 +51,9 @@ export default function AttendanceInsight() {
 
   if (!insightData) return null;
 
-  const recommendation = {
+  const recommendation: { title: string; description: string; icon: IconName; color: string } = {
     title: "Smart Recommendation",
-    description: insightData.lateCount > 0 
+    description: insightData.lateCount > 0
       ? `Punctuality improvement needed. You have been late ${insightData.lateCount} days this month. Consider earlier commute timing.`
       : "Excellent consistency! Maintain your current commute schedule to keep your streak going.",
     icon: "creation-outline",
@@ -350,7 +351,7 @@ export default function AttendanceInsight() {
             }}
           >
             <MaterialCommunityIcons
-              name={recommendation.icon as any}
+              name={recommendation.icon}
               size={24}
               color={recommendation.color}
             />

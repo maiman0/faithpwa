@@ -128,7 +128,7 @@ export default function NewsflashList() {
                     }}
                   >
                     <MaterialCommunityIcons
-                      name={priority.icon as any}
+                      name={priority.icon}
                       size={14}
                       color={priority.color}
                     />

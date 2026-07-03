@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getActiveBroadcasts, acknowledgeBroadcast, type Broadcast } from './broadcast';
+import { getErrorMessage } from '../../helpers/error';
 
 interface BroadcastStore {
   broadcasts: Broadcast[];
@@ -28,8 +29,8 @@ export const useBroadcastStore = create<BroadcastStore>((set) => ({
       } else {
         set({ error: response?.message || 'Failed to fetch broadcasts.' });
       }
-    } catch (e: any) {
-      set({ error: e?.message || 'An unexpected error occurred.' });
+    } catch (e: unknown) {
+      set({ error: getErrorMessage(e, 'An unexpected error occurred.') });
     } finally {
       set({ loading: false });
     }

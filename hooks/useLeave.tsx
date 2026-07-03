@@ -13,6 +13,8 @@ import PickerModal from '../components/pickerModal';
 import ClinicModal from '../components/clinicModal';
 import LeavePolicy from '../components/leave/leavePolicy';
 import { Clinic } from '../contexts/api/clinic';
+import { UploadedDocument } from './useUpload';
+import { getErrorMessage } from '../helpers/error';
 import { useRouter } from 'expo-router';
 
 export const useLeave = (statusFilter: LeaveStatus = 'All') => {
@@ -66,7 +68,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           }}
           keyExtractor={(item) => item.id}
           labelExtractor={(item) => item.label}
-          iconExtractor={(item) => item.icon as any}
+          iconExtractor={(item) => item.icon}
         />
       ),
     });
@@ -85,7 +87,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           }}
           keyExtractor={(item) => item.id}
           labelExtractor={(item) => item.label}
-          iconExtractor={(item) => item.icon as any}
+          iconExtractor={(item) => item.icon}
         />
       ),
     });
@@ -104,7 +106,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           }}
           keyExtractor={(item) => item.id}
           labelExtractor={(item) => item.label}
-          iconExtractor={(item) => item.icon as any}
+          iconExtractor={(item) => item.icon}
         />
       ),
     });
@@ -149,7 +151,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     }
   }, [leaveType]);
 
-  const handleSubmit = async (attachedDocument: any, documentRefNo: string) => {
+  const handleSubmit = async (attachedDocument: UploadedDocument | null, documentRefNo: string) => {
     if (!leaveType) {
       toast("Please select a leave type.");
       return;
@@ -204,12 +206,15 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
       formData.append("end_date", toApiDate(end));
 
       if (attachedDocument) {
+        // React Native's FormData polyfill accepts a {uri, name, type} object
+        // for file uploads, which the DOM lib's Blob-only append() signature
+        // doesn't model — @ts-ignore is the documented escape hatch for this.
         // @ts-ignore
         formData.append("document", {
           uri: attachedDocument.uri,
           name: attachedDocument.name,
           type: attachedDocument.type,
-        } as any);
+        });
       }
 
       const res = await addNewLeave(formData);
@@ -230,10 +235,10 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
           variant: "error",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       hideLoader();
       toast({
-        message: err.message || "An unexpected error occurred",
+        message: getErrorMessage(err, "An unexpected error occurred"),
         variant: "error",
       });
     }
@@ -280,10 +285,10 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
               variant: 'error',
             });
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           hideLoader();
           toast({
-            message: err.message || 'Failed to cancel application',
+            message: getErrorMessage(err, 'Failed to cancel application'),
             variant: 'error',
           });
         }
@@ -298,7 +303,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   };
 
   const showDetails = (item: Leave) => {
-    const statusKey = (item.manager_status as any) || 'Pending';
+    const statusKey = item.manager_status || 'Pending';
     const statusStyle = leaveStatusStyles[statusKey as keyof typeof leaveStatusStyles] || leaveStatusStyles.Pending;
 
     showSheet({
@@ -310,7 +315,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
               padding: 12, 
               borderRadius: 16 
             }}>
-              <MaterialCommunityIcons name={statusStyle.icon as any} size={32} color={statusStyle.color} />
+              <MaterialCommunityIcons name={statusStyle.icon} size={32} color={statusStyle.color} />
             </View>
             <View style={{ flex: 1 }}>
               <Text variant="titleLarge" style={{ fontWeight: "800" }}>{item.leave_name}</Text>

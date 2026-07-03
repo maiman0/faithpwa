@@ -118,7 +118,7 @@ export default function LeaveList() {
                       }}
                     >
                       <MaterialCommunityIcons
-                        name={statusStyle.icon as any}
+                        name={statusStyle.icon}
                         size={13}
                         color={statusStyle.color}
                       />

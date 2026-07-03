@@ -16,9 +16,15 @@ import { useOverlay } from "../../../../contexts/overlayContext";
 import Header from "../../../../components/header";
 import ScrollTop from "../../../../components/scrollTop";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "../../../../constants/icon";
 import AttendanceOverview from "../../../../components/attendance/attendaceOverview";
 import AttendanceInsight from "../../../../components/attendance/attendaceInsight";
 import { useAttendance } from "../../../../hooks/useAttendance";
+
+const VIEW_OPTIONS: { key: "Weekly" | "Monthly"; icon: IconName; label: string }[] = [
+  { key: "Weekly", icon: "view-week-outline", label: "Weekly" },
+  { key: "Monthly", icon: "calendar-blank-outline", label: "Monthly" },
+];
 
 export default function Attendance() {
   const theme = useTheme();
@@ -85,24 +91,13 @@ export default function Attendance() {
                 borderColor: `${theme.colors.outline}20`,
               }}
             >
-              {[
-                {
-                  key: "Weekly",
-                  icon: "view-week-outline",
-                  label: "Weekly",
-                },
-                {
-                  key: "Monthly",
-                  icon: "calendar-blank-outline",
-                  label: "Monthly",
-                },
-              ].map((item) => {
+              {VIEW_OPTIONS.map((item) => {
                 const active = view === item.key;
 
                 return (
                   <TouchableOpacity
                     key={item.key}
-                    onPress={() => setView(item.key as "Weekly" | "Monthly")}
+                    onPress={() => setView(item.key)}
                     activeOpacity={0.8}
                     style={{
                       height: 36,
@@ -128,7 +123,7 @@ export default function Attendance() {
                       </Text>
                     ) : (
                       <MaterialCommunityIcons
-                        name={item.icon as any}
+                        name={item.icon}
                         size={18}
                         color={theme.colors.onSurfaceVariant}
                       />

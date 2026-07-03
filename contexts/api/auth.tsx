@@ -1,5 +1,6 @@
 import api from './api';
 import { removeToken, storeToken, storeSessionId } from '../tokenContext';
+import { getErrorMessage } from '../../helpers/error';
 
 export type LoginCredentials = {
   username: string;
@@ -29,9 +30,8 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
     }
 
     return response.data;
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Unexpected error';
-    return { status: 'error', message };
+  } catch (error: unknown) {
+    return { status: 'error', message: getErrorMessage(error, 'Unexpected error') };
   }
 };
 

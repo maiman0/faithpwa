@@ -19,13 +19,15 @@ const getExt = (nameOrUri: string) => {
 
 const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9._-]/g, '_');
 
+export type UploadedDocument = {
+  uri: string;
+  name: string;
+  type: string;
+  refNo?: string;
+};
+
 export function useUpload() {
-  const [attachedDocument, setAttachedDocument] = useState<{
-    uri: string;
-    name: string;
-    type: string;
-    refNo?: string;
-  } | null>(null);
+  const [attachedDocument, setAttachedDocument] = useState<UploadedDocument | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [documentRefNo, setDocumentRefNo] = useState<string>('');
 

@@ -3,6 +3,7 @@ import { View, Pressable, ScrollView } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDesign } from "../contexts/designContext";
+import { IconName } from "../constants/icon";
 
 type PickerModalProps<T> = {
   title: string;
@@ -11,7 +12,7 @@ type PickerModalProps<T> = {
   onSelect: (item: T) => void;
   keyExtractor: (item: T) => string;
   labelExtractor: (item: T) => string;
-  iconExtractor: (item: T) => keyof typeof MaterialCommunityIcons.glyphMap;
+  iconExtractor: (item: T) => IconName;
 };
 
 // Compact list: show ~4 rows then scroll the rest within the modal.

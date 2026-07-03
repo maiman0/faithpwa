@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { IconName } from "./icon";
 
 export type LeaveStatus = "All" | "Pending" | "Approved" | "Rejected" | "Cancelled";
 
@@ -15,7 +15,7 @@ export const leaveStatusStyles: Record<
   {
     label: string;
     color: string;
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon: IconName;
   }
 > = {
   Pending: {
@@ -40,7 +40,13 @@ export const leaveStatusStyles: Record<
   },
 };
 
-export const LEAVE_REASONS = [
+export type LeaveReasonOption = {
+  id: string;
+  label: string;
+  icon: IconName;
+};
+
+export const LEAVE_REASONS: LeaveReasonOption[] = [
   { id: "personal", label: "Personal", icon: "account-outline" },
   { id: "emergency", label: "Emergency", icon: "alert-outline" },
   { id: "medical", label: "Medical", icon: "medical-bag" },
@@ -51,7 +57,7 @@ export const LEAVE_REASONS = [
 export type LeaveTypeOption = {
   id: string;
   label: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   // Medical types require a supporting document AND surface the clinic field.
   medical?: boolean;
   // Non-medical types that still require a supporting document (no clinic).
@@ -72,14 +78,21 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
   { id: "WFH", label: "Work From Home", icon: "home-account", requiresDocument: true },
 ];
 
-export const LEAVE_PERIODS = [
+export type LeavePeriodOption = {
+  id: string;
+  label: string;
+  value: string;
+  icon: IconName;
+};
+
+export const LEAVE_PERIODS: LeavePeriodOption[] = [
   { id: "full", label: "Full Day", value: "Full Day", icon: "clock-outline" },
   { id: "morning", label: "First Half", value: "1st Half Day", icon: "weather-sunny" },
   { id: "afternoon", label: "Second Half", value: "2nd Half Day", icon: "weather-night" },
 ];
 
 export const LEAVE_POLICIES: {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: IconName;
   color: string;
   title: string;
   description: string;

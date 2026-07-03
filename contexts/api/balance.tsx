@@ -1,4 +1,5 @@
 import api from './api';
+import { getErrorMessage } from '../../helpers/error';
 
 export interface LeaveBalanceItem {
   leaveType: string;
@@ -34,9 +35,8 @@ export const getAllLeaveBalances = async (month?: string): Promise<LeaveBalanceI
     });
 
     return response.data;
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Error fetching leave balances.';
-    return { error: message };
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Error fetching leave balances.') };
   }
 };
 
@@ -55,8 +55,7 @@ export const getLeaveBalanceByType = async (
     });
     if ('error' in response.data) return { error: response.data.error };
     return response.data;
-  } catch (error: any) {
-    const message = error?.response?.data?.message || error?.message || 'Error fetching specific leave balance.';
-    return { error: message };
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Error fetching specific leave balance.') };
   }
 };

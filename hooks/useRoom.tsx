@@ -15,6 +15,7 @@ import {
   roomImageUrl,
 } from '../helpers/room';
 import ReservationSummary from '../components/room/reservationSummary';
+import { getErrorMessage } from '../helpers/error';
 
 export type TimeSlot = {
   label: string;
@@ -137,10 +138,11 @@ export const useRoom = () => {
       void fetchBookings();
       resetBookingFlow();
       return res;
-    } catch (err: any) {
+    } catch (err: unknown) {
       hideLoader();
-      toast({ message: err.message || "Failed to book room", variant: 'error' });
-      return { error: err.message };
+      const message = getErrorMessage(err, "Failed to book room");
+      toast({ message, variant: 'error' });
+      return { error: message };
     }
   }, [getBookingPayload, showLoader, createBooking, staff, hideLoader, toast, router, fetchBookings, resetBookingFlow]);
 
@@ -289,7 +291,7 @@ export const useRoom = () => {
       }
 
       return timeSlots;
-    } catch (error: any) {
+    } catch {
       hideLoader();
       toast({ message: "Failed to fetch availability", variant: 'error' });
       return null;

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getStaffDetails, updateStaffDetails, type StaffResponse } from "./staff";
+import { getErrorMessage } from "../../helpers/error";
 
 type StaffStore = {
   staff: StaffResponse | null;
@@ -21,10 +22,10 @@ export const useStaffStore = create<StaffStore>((set, get) => ({
     try {
       const data = await getStaffDetails();
       set({ staff: data, error: null });
-    } catch (e: any) {
+    } catch (e: unknown) {
       set({
         staff: null,
-        error: e?.message || "Failed to fetch staff details.",
+        error: getErrorMessage(e, "Failed to fetch staff details."),
       });
     } finally {
       set({ loading: false });
@@ -49,8 +50,8 @@ export const useStaffStore = create<StaffStore>((set, get) => ({
       const updated = await getStaffDetails();
       set({ staff: updated });
       return { success: true };
-    } catch (e: any) {
-      return { success: false, error: e?.message || "Failed to update staff." };
+    } catch (e: unknown) {
+      return { success: false, error: getErrorMessage(e, "Failed to update staff.") };
     }
   },
 

@@ -5,9 +5,22 @@ export interface ChangelogEntry {
 }
 
 export const APP_NAME = "FAITH Workspace";
-export const APP_VERSION = "0.3.0";
+export const APP_VERSION = "0.4.0";
 
 export const changelog: ChangelogEntry[] = [
+  {
+    version: "0.4.0",
+    date: "2026-07-03",
+    changes: [
+      "Home header avatar now shows a chevron-down badge signaling it opens the account menu",
+      "Removed the Push Notifications stub row from App Preferences",
+      "Fixed the Dark Mode toggle not responding — replaced react-native-paper's Switch with a custom animated ToggleSwitch, and fixed a stale-closure bug that kept it visually stuck",
+      "Removed leftover mock newsflash data; Newsflash is now fully backed by the real API",
+      "Room Booking image URLs now build from a shared constant instead of a hardcoded string",
+      "Removed unused scale/setScale design-token infrastructure",
+      "Added CHANGELOG.md to track version history in the repo",
+    ],
+  },
   {
     version: "0.3.0",
     date: "2026-07-03",

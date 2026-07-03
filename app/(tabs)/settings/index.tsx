@@ -12,7 +12,6 @@ import {
   Text,
   Card,
   Divider,
-  Switch,
   Avatar,
 } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,9 +19,9 @@ import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import { useOverlay } from "../../../contexts/overlayContext";
 import { useAuth } from "../../../contexts/authContext";
-import { useAppTheme } from "../../../contexts/themeContext";
 import ScrollTop from "../../../components/scrollTop";
 import Tail from "../../../components/tail";
+import PreferencesSheet from "../../../components/preferencesSheet";
 import { useRouter } from "expo-router";
 
 import { useStaff } from "../../../hooks/useStaff";
@@ -34,7 +33,6 @@ export default function Settings() {
   const tokens = useDesign();
   const { user } = useAuth();
   const { staff } = useStaff();
-  const { isDark, toggle: toggleTheme } = useAppTheme();
   const { onScroll } = useTabs();
   const { toast, showSheet } = useOverlay();
   const router = useRouter();
@@ -61,55 +59,7 @@ export default function Settings() {
   const handlePreferences = () => {
     showSheet({
       title: "App Preferences",
-      content: (
-        <View style={{ gap: tokens.spacing.lg }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingVertical: tokens.spacing.sm,
-            }}
-          >
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text variant="titleMedium">Dark Mode</Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                Adjust the appearance of the application
-              </Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              color={theme.colors.primary}
-            />
-          </View>
-
-          <Divider />
-
-          <View style={{ gap: tokens.spacing.sm }}>
-            <Text variant="titleSmall">Notification Settings</Text>
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingVertical: tokens.spacing.xs,
-              }}
-              onPress={() => toast("Notification settings coming soon")}
-            >
-              <Text variant="bodyLarge">Push Notifications</Text>
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={24}
-                color={theme.colors.outline}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ),
+      content: <PreferencesSheet />,
     });
   };
 

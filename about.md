@@ -17,7 +17,7 @@ Faith (HRMS PWA First)
 │   │           └── useSession surfaces last-login time/IP/platform for Home footer, degrades gracefully if unavailable
 │   │
 │   ├── Home
-│   │   ├── Goal - Single dashboard summarizing attendance, leave, newsflash, and room-booking status with quick navigation.
+│   │   ├── Goal - Single dashboard summarizing attendance, leave, newsflash and room-booking status with quick navigation.
 │   │   └── Features
 │   │       ├── Time-of-day greeting header, avatar menu (Update Details / switch operation-manager view)
 │   │       ├── Live attendance summary, leave stats (pending + AL balance), newsflash carousel, room booking stats — all hook-driven
@@ -77,7 +77,7 @@ Faith (HRMS PWA First)
 │   │   └── Features
 │   │       ├── OverlayProvider: alert, confirm (destructive variant), toast (5 variants), modal, bottom sheet, fullscreen loader, performRefresh helper; no-op fallback outside provider
 │   │       ├── ThemeProvider: light/dark MD3 theme, custom brand palette + SourceSansPro typography
-│   │       ├── DesignProvider: spacing/radii/sizing/motion/elevation tokens with a scale multiplier
+│   │       ├── DesignProvider: spacing/radii/sizing/motion/elevation design tokens
 │   │       ├── Single Axios instance: 30s timeout, JWT + platform/app-version headers, global 401 → session-expired handler
 │   │       └── Clinic search (debounced) + DocumentModal (leave document ref capture)
 │   │
@@ -98,17 +98,7 @@ Faith (HRMS PWA First)
 
 
 Todo
-├── App
-│   └── Overlay revise — bottom sheet
-├── Staff / Profile / Settings
-│   └── Push Notifications row is a stub — tapping it just shows a "coming soon" toast (app/(tabs)/settings/index.tsx). Either implement or hide the row until ready.
-├── Leave
-│   ├── stats.medicalBalance is hardcoded to 0 (hooks/useLeave.tsx) — /balance.php only returns a single AL balance today, so medical/other leave balances aren't real. Needs backend support before this can show real data.
-│   └── isMutationOk (contexts/api/leave.tsx) patches around 3 different "success" response shapes from PHP endpoints — backend contract isn't standardized; worth aligning with backend team.
-├── Newsflash
-│   └── constants/newsflash.ts still ships a 6-item mock dataset with a comment admitting it's dev-era leftover. Check whether anything still imports it live; if not, delete it.
-└── Repo-level
-    └── No repo-level CHANGELOG.md file — the in-app changelog (constants/about.ts) is the only tracked source of version history so far.
+(none open)
 
 Done
 ├── App
@@ -116,22 +106,30 @@ Done
 │   ├── Fixed notch/home-indicator overlapping app content — they're now normal flex rows reserving real top/bottom safe-area space instead of absolute overlays.
 │   ├── Moved the Overlay demo screen from app/(tabs)/home/main.tsx to a top-level unlisted route app/main.tsx, removed its Stack.Screen registration from home/_layout.tsx, and exempted /main from the root auth-redirect guard so it's reachable by direct URL regardless of login state.
 │   ├── About sheet "What's New" now shows only the latest changelog entry (changelog[0]) instead of the full history.
-│   └── Fixed toast/loader/modal/sheet rendering full-browser-width instead of clipped to the device frame — react-native-paper's <Portal> always teleports to the nearest Portal.Host, and the default one (from PaperProvider, in themeContext.tsx) sits above the frame at the app root. Split overlayContext.tsx's rendering into a new <OverlayOutlet /> component, nested it inside a local <Portal.Host> placed within the frame's screen View (app/_layout.tsx), so those overlays now resolve to that inner host instead of escaping to the outer one. Alert/confirm looked fine before only by coincidence (small, centered dialogs).
+│   ├── Fixed toast/loader/modal/sheet rendering full-browser-width instead of clipped to the device frame — react-native-paper's <Portal> always teleports to the nearest Portal.Host, and the default one (from PaperProvider, in themeContext.tsx) sits above the frame at the app root. Split overlayContext.tsx's rendering into a new <OverlayOutlet /> component, nested it inside a local <Portal.Host> placed within the frame's screen View (app/_layout.tsx), so those overlays now resolve to that inner host instead of escaping to the outer one. Alert/confirm looked fine before only by coincidence (small, centered dialogs).
+│   └── Home header avatar (components/head.tsx) now shows a small chevron-down badge overlapping its bottom-right corner, signaling it opens the account picker menu.
+├── Newsflash
+│   └── Removed the dead mock dataset (newsflashes) and its now-unused NewsflashItem type from constants/newsflash.ts — confirmed no live imports first. Real data comes entirely from contexts/api/broadcast.tsx / broadcastStore.ts.
+├── Room Booking
+│   └── constants/room.ts was effectively empty. Added ROOM_IMAGE_BASE_URL there (the CDN base URL, a business constant) and updated helpers/room.ts's roomImageUrl() to build off it — now matches the constants/business-config vs. helpers/pure-formatting split used by every other module.
 ├── Staff / Profile / Settings
 │   ├── About sheet version was hardcoded ("2.4.0") and didn't match package.json — now sourced from constants/about.ts (APP_VERSION), synced with package.json/app.json.
-│   └── Added a "What's New" changelog section to the About sheet, data-driven from constants/about.ts (changelog array).
+│   ├── Added a "What's New" changelog section to the About sheet, data-driven from constants/about.ts (changelog array).
+│   ├── Removed the Push Notifications stub row from App Preferences (app/(tabs)/settings/index.tsx) — it only ever showed a "coming soon" toast; Dark Mode toggle is now the only item in that sheet.
+│   ├── Dark Mode toggle wasn't responding to taps with react-native-paper's <Switch> on web. Replaced it with a custom components/toggleSwitch.tsx (Animated track + thumb, theme-driven colors) used in App Preferences.
+│   └── Dark Mode switch stayed visually stuck even with the custom switch — the real bug was that showSheet()'s content is a JSX element evaluated once at open time (contexts/overlayContext.tsx captures a static snapshot), so isDark/toggleTheme were frozen at whatever they were when the sheet opened. Fixed by extracting the sheet body into components/preferencesSheet.tsx, which reads useAppTheme() itself so it re-renders on context changes regardless of when the sheet was opened.
+├── Shared (Design Tokens)
+│   └── Confirmed scale/setScale and useDesignContext (contexts/designContext.tsx) had zero consumers anywhere. Removed them — DesignProvider now just serves the static design tokens object via useDesign().
 └── Repo-level
-    └── Bumped package.json / app.json / constants/about.ts to 0.2.0 (App Layout device-frame feature) after 0.1.0 handover build.
+    ├── Bumped package.json / app.json / constants/about.ts to 0.2.0 (App Layout device-frame feature) after 0.1.0 handover build.
+    └── Added CHANGELOG.md at the repo root (Keep a Changelog style), mirroring constants/about.ts. Both must be updated together on future version bumps.
 
 Revise
 ├── Auth
 │   ├── Profile is populated with placeholder name/initials ("User"/"Staff") on load/sign-in until useStaff fetches real data — confirm this is intentional (loading state) not a bug.
 │   └── loadSession failure only does console.error — no user-facing error/toast if session restore fails.
 ├── App
-│   └── app/+html.tsx still carries PWA meta tags (manifest link, apple-touch-icon, apple-mobile-web-app-capable) that are silently dropped from the real build for the same reason (web.output "single" ignores +html.tsx) — worth checking whether the exported HTML is actually missing the manifest link/PWA installability tags in production.
-├── Room Booking
-│   └── constants/room.ts is effectively empty — all "constants" (image URL builder, date formatting) live in helpers/room.ts instead. Structural inconsistency vs. other modules; consider moving for consistency (not urgent, no functional impact).
-├── Staff / Profile / Settings
-│   └── About sheet still links an external "Latest Development" Vercel preview URL alongside the production URL — confirm this should still be exposed to end users before release.
-└── Shared (Design Tokens)
-    └── DesignProvider's scale/setScale mechanism exists but nothing in current screens calls setScale — likely unused/future-facing (accessibility/dynamic type). Confirm intent or remove if dead.
+│   ├── app/+html.tsx still carries PWA meta tags (manifest link, apple-touch-icon, apple-mobile-web-app-capable) that are silently dropped from the real build for the same reason (web.output "single" ignores +html.tsx) — worth checking whether the exported HTML is actually missing the manifest link/PWA installability tags in production.
+│   └── showModal()/showSheet() content is captured as a static JSX snapshot at call time (contexts/overlayContext.tsx) — any value baked into that content as a plain prop (not read via a hook inside a child component) will go stale if it changes while the overlay is open. Home's account picker (app/(tabs)/home/index.tsx, operationView label) has the same pattern; low-risk there since the modal closes immediately on selection, but worth keeping in mind for future overlay content.
+└── Staff / Profile / Settings
+    └── About sheet still links an external "Latest Development" Vercel preview URL alongside the production URL — confirm this should still be exposed to end users before release.

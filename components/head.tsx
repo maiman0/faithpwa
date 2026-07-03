@@ -126,6 +126,30 @@ export default function Head({
           >
             {avatarText}
           </Text>
+
+          {onAvatarPress && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: -2,
+                right: -2,
+                width: 16,
+                height: 16,
+                borderRadius: tokens.radii.full,
+                backgroundColor: colors.surface,
+                borderWidth: 1.5,
+                borderColor: colors.background,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MaterialCommunityIcons
+                name="chevron-down"
+                size={11}
+                color={colors.onSurfaceVariant}
+              />
+            </View>
+          )}
         </Pressable>
       </View>
     </View>

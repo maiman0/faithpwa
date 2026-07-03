@@ -6,14 +6,13 @@ import {
   formatFullDateYear,
   formatClockTime,
 } from "./date";
+import { ROOM_IMAGE_BASE_URL } from "../constants/room";
 
 // Timezone-safe "YYYY-MM-DD" for the selected day (store seed + "today" checks).
 export const todayApiDate = (): string => toApiDate(new Date());
 
 export const roomImageUrl = (roomId?: number | null): string | null =>
-  roomId == null
-    ? null
-    : `https://endpoint.daythree.ai/faithMobile/room/${roomId}.jpeg`;
+  roomId == null ? null : `${ROOM_IMAGE_BASE_URL}/${roomId}.jpeg`;
 
 export const toRoomApiDate = (value?: string | Date | null): string =>
   toApiDate(value);

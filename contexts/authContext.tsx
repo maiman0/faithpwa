@@ -68,6 +68,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (e) {
         console.error("Failed to load session", e);
+        toast({
+          message: "Couldn't restore your session. Please sign in again.",
+          variant: "error",
+        });
       } finally {
         setTimeout(() => {
           hideLoader();

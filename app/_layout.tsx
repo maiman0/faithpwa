@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { DesignProvider } from "../contexts/designContext";
 import { ThemeProvider } from "../contexts/themeContext";
-import { OverlayProvider } from "../contexts/overlayContext";
+import { OverlayProvider, OverlayOutlet } from "../contexts/overlayContext";
 import { AuthProvider, useAuth } from "../contexts/authContext";
 import { TokenProvider } from "../contexts/tokenContext";
 import * as SplashScreen from "expo-splash-screen";
@@ -12,9 +12,10 @@ import {
   SourceSansPro_600SemiBold,
   SourceSansPro_700Bold,
 } from "@expo-google-fonts/source-sans-pro";
-import { useEffect } from "react";
-import { View, Platform, useWindowDimensions } from "react-native";
-import { useTheme } from "react-native-paper";
+import { useEffect, useState } from "react";
+import { View, Text, Platform, useWindowDimensions } from "react-native";
+import { useTheme, Portal } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   SafeAreaProvider,
   SafeAreaView,
@@ -59,10 +60,28 @@ function AppContent({ fontsLoaded }: { fontsLoaded: boolean }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobileWidth = width <= 500;
+  const [isStandalonePwa, setIsStandalonePwa] = useState(false);
+
+  // Detect installed/standalone PWA so the desktop device frame collapses there —
+  // an installed app already fills the screen natively and doesn't need a mockup.
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const query = window.matchMedia("(display-mode: standalone)");
+    setIsStandalonePwa(query.matches);
+    const handleChange = (e: MediaQueryListEvent) => setIsStandalonePwa(e.matches);
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
+  }, []);
+
+  const showDeviceFrame = Platform.OS === "web" && !isMobileWidth && !isStandalonePwa;
 
   // 1. Unified Navigation Guard
   useEffect(() => {
     if (isAuthLoading || !fontsLoaded) return;
+
+    // /main is an unlisted Overlay-system demo page, exempt from the
+    // logged-in/out redirect so it's reachable by URL regardless of auth state.
+    if (segments[0] === "main") return;
 
     const inAuthGroup = segments[0] === "(tabs)";
 
@@ -135,47 +154,165 @@ function AppContent({ fontsLoaded }: { fontsLoaded: boolean }) {
     );
   }
 
+  const stack = (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
+      }}
+    />
+  );
+
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor:
-          Platform.OS === "web" && !isMobileWidth
-            ? theme.colors.surfaceVariant
-            : theme.colors.background,
+        backgroundColor: showDeviceFrame
+          ? theme.colors.surfaceVariant
+          : theme.colors.background,
         alignItems: "center",
+        justifyContent: showDeviceFrame ? "center" : "flex-start",
         // @ts-ignore - overscrollBehavior is supported on web
         overscrollBehavior: "none",
       }}
     >
       <StatusBar style={theme.dark ? "light" : "dark"} />
-      <SafeAreaView
-        style={{
-          flex: 1,
-          width: "100%",
-          maxWidth: 500,
-          backgroundColor: theme.colors.background,
-          overflow: "hidden",
-          ...(Platform.OS === "web" && {
-            shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.1,
-            shadowRadius: 20,
-            borderLeftWidth: 1,
-            borderRightWidth: 1,
-            borderColor: theme.colors.outlineVariant,
-          }),
-        }}
-      >
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: theme.colors.background,
-            },
+      {showDeviceFrame ? (
+        <View
+          style={{
+            width: 390,
+            height: "90%",
+            maxHeight: 844,
+            backgroundColor: "#111318",
+            borderRadius: 54,
+            padding: 14,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 30 },
+            shadowOpacity: 0.35,
+            shadowRadius: 50,
           }}
-        />
-      </SafeAreaView>
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: theme.colors.background,
+              borderRadius: 40,
+              overflow: "hidden",
+            }}
+          >
+            {/* Local Portal.Host so overlays (toast/modal/sheet/loader) render
+                clipped to the device frame instead of escaping to the default
+                outer Portal.Host, which spans the full browser viewport. */}
+            <Portal.Host>
+              {/* Fake status bar — reserves top safe-area space so app content never sits under the notch */}
+              <View
+                style={{
+                  height: 44,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 28,
+                }}
+              >
+                <Text
+                  style={{
+                    color: theme.colors.onSurface,
+                    fontSize: 13,
+                    fontWeight: "700",
+                  }}
+                >
+                  9:41
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="signal-cellular-3"
+                    size={14}
+                    color={theme.colors.onSurface}
+                  />
+                  <MaterialCommunityIcons
+                    name="wifi"
+                    size={14}
+                    color={theme.colors.onSurface}
+                  />
+                  <MaterialCommunityIcons
+                    name="battery"
+                    size={16}
+                    color={theme.colors.onSurface}
+                  />
+                </View>
+
+                {/* Notch — cuts into the top edge, overlapping the status bar row only */}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: "50%",
+                    transform: [{ translateX: -60 }],
+                    width: 120,
+                    height: 26,
+                    backgroundColor: "#111318",
+                    borderBottomLeftRadius: 16,
+                    borderBottomRightRadius: 16,
+                  }}
+                />
+              </View>
+
+              <SafeAreaView style={{ flex: 1 }}>{stack}</SafeAreaView>
+
+              {/* Fake home indicator — reserves bottom safe-area space */}
+              <View
+                style={{
+                  height: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    width: 120,
+                    height: 5,
+                    borderRadius: 3,
+                    backgroundColor: theme.colors.onSurfaceVariant,
+                    opacity: 0.5,
+                  }}
+                />
+              </View>
+
+              <OverlayOutlet />
+            </Portal.Host>
+          </View>
+        </View>
+      ) : (
+        <SafeAreaView
+          style={{
+            flex: 1,
+            width: "100%",
+            maxWidth: 500,
+            backgroundColor: theme.colors.background,
+            overflow: "hidden",
+            ...(Platform.OS === "web" && {
+              shadowColor: theme.colors.shadow,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+              borderLeftWidth: 1,
+              borderRightWidth: 1,
+              borderColor: theme.colors.outlineVariant,
+            }),
+          }}
+        >
+          {stack}
+          <OverlayOutlet />
+        </SafeAreaView>
+      )}
     </View>
   );
 }

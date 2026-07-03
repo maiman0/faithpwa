@@ -1,7 +1,7 @@
 Category → Module → Goal → Features
 
 Faith (HRMS PWA First)
-├── About — Mobile-first companion app to the FAITH Workspace Platform (Expo + RN + TS). v0.1.0 (handover build), version and changelog sourced from constants/about.ts.
+├── About — Mobile-first companion app to the FAITH Workspace Platform (Expo + RN + TS). v0.2.0 (handover build), version and changelog sourced from constants/about.ts.
 │
 ├── Category
 │   ├── Auth
@@ -81,12 +81,20 @@ Faith (HRMS PWA First)
 │   │       ├── Single Axios instance: 30s timeout, JWT + platform/app-version headers, global 401 → session-expired handler
 │   │       └── Clinic search (debounced) + DocumentModal (leave document ref capture)
 │   │
-│   └── App Layout
-│       ├── Goal - Make the web build feel native on any surface: full-bleed on real phones/installed PWA, a phone-mockup frame in a normal desktop browser tab.
+│   ├── App Layout
+│   │   ├── Goal - Make the web build feel native on any surface: full-bleed on real phones/installed PWA, a phone-mockup frame in a normal desktop browser tab.
+│   │   └── Features
+│   │       ├── Implemented in app/_layout.tsx (AppContent) as a React/View-based frame — app/+html.tsx customization does NOT apply, since web.output is "single" (Expo ignores +html.tsx in that mode); confirmed by inspecting `expo export -p web` output.
+│   │       ├── Desktop-width, non-standalone: renders a phone bezel (dark rounded frame) with a fake status bar (time + signal/wifi/battery icons), a notch cut into the status bar row, and a fake home indicator — status bar and home indicator are normal flex rows (not absolute overlays), so app content gets real top/bottom safe-area space instead of sitting under them.
+│   │       ├── No-op on mobile-width screens (existing plain SafeAreaView path, unchanged)
+│   │       └── Collapses via matchMedia("(display-mode: standalone)") so an installed PWA still fills the screen natively
+│   │
+│   └── Overlay Demo (app/main.tsx)
+│       ├── Goal - Give a place to exercise every Overlay primitive (alert, confirm, toast, modal, sheet, loader) without wiring one into a real screen.
 │       └── Features
-│           ├── #mooney-phone-frame wrapper in app/+html.tsx: bezel + fake notch + fake home indicator around the app on desktop widths (≥768px)
-│           ├── No-op by default (mobile/narrow viewports render full-bleed, unaffected)
-│           └── Explicitly collapses under @media (display-mode: standalone) so an installed PWA still fills the screen natively
+│           ├── Top-level unlisted route at /main (moved out of app/(tabs)/home/main.tsx) — not linked from any in-app button/nav, reached by typing the URL directly
+│           ├── Exempted from the root auth-redirect guard (app/_layout.tsx) so it's reachable whether logged in or out
+│           └── Demo toggle between populated state and NoData empty state
 
 
 Todo
@@ -104,19 +112,23 @@ Todo
 
 Done
 ├── App
-│   └── Desktop-only phone frame (#mooney-phone-frame) added in app/+html.tsx — bezel/notch/home-indicator on wide viewports, no-op on mobile, collapses in installed PWA (standalone) mode.
+│   ├── Desktop device frame implemented in app/_layout.tsx (not +html.tsx, which is inert under web.output "single") — bezel, fake status bar, notch, and home indicator on wide viewports, no-op on mobile, collapses in installed PWA (standalone) mode.
+│   ├── Fixed notch/home-indicator overlapping app content — they're now normal flex rows reserving real top/bottom safe-area space instead of absolute overlays.
+│   ├── Moved the Overlay demo screen from app/(tabs)/home/main.tsx to a top-level unlisted route app/main.tsx, removed its Stack.Screen registration from home/_layout.tsx, and exempted /main from the root auth-redirect guard so it's reachable by direct URL regardless of login state.
+│   ├── About sheet "What's New" now shows only the latest changelog entry (changelog[0]) instead of the full history.
+│   └── Fixed toast/loader/modal/sheet rendering full-browser-width instead of clipped to the device frame — react-native-paper's <Portal> always teleports to the nearest Portal.Host, and the default one (from PaperProvider, in themeContext.tsx) sits above the frame at the app root. Split overlayContext.tsx's rendering into a new <OverlayOutlet /> component, nested it inside a local <Portal.Host> placed within the frame's screen View (app/_layout.tsx), so those overlays now resolve to that inner host instead of escaping to the outer one. Alert/confirm looked fine before only by coincidence (small, centered dialogs).
 ├── Staff / Profile / Settings
-│   ├── About sheet version was hardcoded ("2.4.0") and didn't match package.json — now sourced from constants/about.ts (APP_VERSION = "0.1.0"), synced with package.json/app.json.
+│   ├── About sheet version was hardcoded ("2.4.0") and didn't match package.json — now sourced from constants/about.ts (APP_VERSION), synced with package.json/app.json.
 │   └── Added a "What's New" changelog section to the About sheet, data-driven from constants/about.ts (changelog array).
 └── Repo-level
-    └── Bumped package.json / app.json from 1.0.0 → 0.1.0 to reflect handover/pre-release status.
+    └── Bumped package.json / app.json / constants/about.ts to 0.2.0 (App Layout device-frame feature) after 0.1.0 handover build.
 
 Revise
 ├── Auth
 │   ├── Profile is populated with placeholder name/initials ("User"/"Staff") on load/sign-in until useStaff fetches real data — confirm this is intentional (loading state) not a bug.
 │   └── loadSession failure only does console.error — no user-facing error/toast if session restore fails.
-├── Home
-│   └── app/(tabs)/home/main.tsx is a leftover "Overlay Demo" playground screen (fake sync simulation, demo toggles) — not a shipped feature, worth removing or gating out of prod.
+├── App
+│   └── app/+html.tsx still carries PWA meta tags (manifest link, apple-touch-icon, apple-mobile-web-app-capable) that are silently dropped from the real build for the same reason (web.output "single" ignores +html.tsx) — worth checking whether the exported HTML is actually missing the manifest link/PWA installability tags in production.
 ├── Room Booking
 │   └── constants/room.ts is effectively empty — all "constants" (image URL builder, date formatting) live in helpers/room.ts instead. Structural inconsistency vs. other modules; consider moving for consistency (not urgent, no functional impact).
 ├── Staff / Profile / Settings

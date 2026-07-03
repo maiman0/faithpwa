@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   ScrollView,
@@ -15,12 +15,11 @@ import {
   Icon,
   SegmentedButtons,
 } from "react-native-paper";
-import { useDesign } from "../../../contexts/designContext";
-import { useTabs } from "../../../contexts/tabContext";
-import { useOverlay } from "../../../contexts/overlayContext";
-import Header from "../../../components/header";
-import ScrollTop from "../../../components/scrollTop";
-import NoData from "../../../components/noData";
+import { useDesign } from "../contexts/designContext";
+import { useOverlay } from "../contexts/overlayContext";
+import Header from "../components/header";
+import ScrollTop from "../components/scrollTop";
+import NoData from "../components/noData";
 
 const DAYS = [
   "Monday",
@@ -32,10 +31,12 @@ const DAYS = [
   "Sunday",
 ];
 
-export default function Main() {
+// Unlisted dev-only route — showcases the Overlay system (alert, confirm,
+// toast, modal, sheet, loader). Not linked from anywhere in the app; reached
+// by navigating directly to /main in the browser.
+export default function OverlayDemo() {
   const theme = useTheme();
   const tokens = useDesign();
-  const { setHideTabBar } = useTabs();
   const {
     alert,
     confirm,
@@ -51,11 +52,6 @@ export default function Main() {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [demoMode, setDemoMode] = useState("content");
-
-  useEffect(() => {
-    setHideTabBar(true);
-    return () => setHideTabBar(false);
-  }, []);
 
   const toggleDay = (day: string) => {
     setSelectedDays((prev) =>
@@ -264,11 +260,7 @@ export default function Main() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Header
-          title="Overlay Demo"
-          subtitle="Interactive Components"
-          showBack
-        />
+        <Header title="Overlay Demo" subtitle="Interactive Components" showBack={false} />
 
         <SegmentedButtons
           value={demoMode}

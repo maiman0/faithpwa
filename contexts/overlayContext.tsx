@@ -74,6 +74,20 @@ type OverlayContextType = {
     task: () => Promise<void>,
     message?: string,
   ) => Promise<void>;
+  // Internal render state — consumed by <OverlayOutlet />, not by screens.
+  _alertVisible: boolean;
+  _alertConfig: AlertOptions | null;
+  _confirmVisible: boolean;
+  _confirmConfig: ConfirmOptions | null;
+  _toastVisible: boolean;
+  _toastConfig: ToastOptions | null;
+  _modalConfig: ModalOptions | null;
+  _sheetConfig: SheetOptions | null;
+  _loaderMessage: string | undefined;
+  _dismissToast: () => void;
+  _handleAlertClose: () => void;
+  _handleConfirmAction: () => void;
+  _handleConfirmCancel: () => void;
 };
 
 const OverlayContext = createContext<OverlayContextType | undefined>(undefined);
@@ -202,6 +216,8 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
     confirmConfig?.onCancel?.();
   };
 
+  const dismissToast = useCallback(() => setToastVisible(false), []);
+
   return (
     <OverlayContext.Provider
       value={{
@@ -220,78 +236,137 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         isRefreshing,
         isOverlayActive,
         performRefresh,
+        _alertVisible: alertVisible,
+        _alertConfig: alertConfig,
+        _confirmVisible: confirmVisible,
+        _confirmConfig: confirmConfig,
+        _toastVisible: toastVisible,
+        _toastConfig: toastConfig,
+        _modalConfig: modalConfig,
+        _sheetConfig: sheetConfig,
+        _loaderMessage: loaderMessage,
+        _dismissToast: dismissToast,
+        _handleAlertClose: handleAlertClose,
+        _handleConfirmAction: handleConfirmAction,
+        _handleConfirmCancel: handleConfirmCancel,
       }}
     >
       {children}
-
-      <OverlayAlert
-        visible={alertVisible}
-        title={alertConfig?.title}
-        message={alertConfig?.message}
-        buttonText={alertConfig?.buttonText}
-        onClose={handleAlertClose}
-      />
-
-      <OverlayConfirm
-        visible={confirmVisible}
-        title={confirmConfig?.title}
-        message={confirmConfig?.message}
-        confirmText={confirmConfig?.confirmText}
-        cancelText={confirmConfig?.cancelText}
-        onConfirm={handleConfirmAction}
-        onCancel={handleConfirmCancel}
-        isDestructive={confirmConfig?.isDestructive}
-      />
-
-      <OverlayModal
-        visible={modalVisible}
-        content={modalConfig?.content}
-        onDismiss={hideModal}
-        dismissable={modalConfig?.dismissable}
-      />
-
-      <OverlaySheet
-        visible={sheetVisible}
-        title={sheetConfig?.title}
-        content={sheetConfig?.content}
-        onDismiss={hideSheet}
-      />
-
-      <OverlayToast
-        visible={toastVisible}
-        message={toastConfig?.message || ""}
-        onDismiss={() => setToastVisible(false)}
-        duration={toastConfig?.duration}
-        variant={toastConfig?.variant}
-        icon={toastConfig?.icon}
-      />
-
-      <OverlayLoader visible={isLoading} message={loaderMessage} />
     </OverlayContext.Provider>
   );
 }
 
+const dummyOverlayContext: OverlayContextType = {
+  alert: () => {},
+  confirm: () => {},
+  toast: () => {},
+  showModal: () => {},
+  hideModal: () => {},
+  modalVisible: false,
+  showSheet: () => {},
+  hideSheet: () => {},
+  sheetVisible: false,
+  showLoader: () => {},
+  hideLoader: () => {},
+  isLoading: false,
+  isRefreshing: false,
+  isOverlayActive: false,
+  performRefresh: async (task: () => Promise<void>) => {
+    await task();
+  },
+  _alertVisible: false,
+  _alertConfig: null,
+  _confirmVisible: false,
+  _confirmConfig: null,
+  _toastVisible: false,
+  _toastConfig: null,
+  _modalConfig: null,
+  _sheetConfig: null,
+  _loaderMessage: undefined,
+  _dismissToast: () => {},
+  _handleAlertClose: () => {},
+  _handleConfirmAction: () => {},
+  _handleConfirmCancel: () => {},
+};
+
 export const useOverlay = () => {
   const context = useContext(OverlayContext);
-  if (!context) {
-    // Return a dummy object to prevent crashes if used outside provider
-    return {
-      alert: () => {},
-      confirm: () => {},
-      toast: () => {},
-      showModal: () => {},
-      hideModal: () => {},
-      modalVisible: false,
-      showSheet: () => {},
-      hideSheet: () => {},
-      sheetVisible: false,
-      showLoader: () => {},
-      hideLoader: () => {},
-      isLoading: false,
-      isRefreshing: false,
-      isOverlayActive: false,
-      performRefresh: async (task: () => Promise<void>) => { await task(); },
-    } as OverlayContextType;
-  }
-  return context;
+  // Dummy fallback prevents crashes if used outside the provider.
+  return context ?? dummyOverlayContext;
 };
+
+// Renders the actual overlay UI. Kept separate from OverlayProvider so it can
+// be mounted at a specific point in the tree (e.g. inside the desktop device
+// frame in app/_layout.tsx) instead of always escaping to the outermost
+// Portal.Host — otherwise toast/modal/sheet/loader render relative to the
+// full browser viewport instead of staying inside the frame.
+export function OverlayOutlet() {
+  const {
+    _alertVisible,
+    _alertConfig,
+    _confirmVisible,
+    _confirmConfig,
+    _toastVisible,
+    _toastConfig,
+    _modalConfig,
+    _sheetConfig,
+    _loaderMessage,
+    isLoading,
+    modalVisible,
+    sheetVisible,
+    hideModal,
+    hideSheet,
+    _dismissToast,
+    _handleAlertClose,
+    _handleConfirmAction,
+    _handleConfirmCancel,
+  } = useOverlay();
+
+  return (
+    <>
+      <OverlayAlert
+        visible={_alertVisible}
+        title={_alertConfig?.title}
+        message={_alertConfig?.message}
+        buttonText={_alertConfig?.buttonText}
+        onClose={_handleAlertClose}
+      />
+
+      <OverlayConfirm
+        visible={_confirmVisible}
+        title={_confirmConfig?.title}
+        message={_confirmConfig?.message}
+        confirmText={_confirmConfig?.confirmText}
+        cancelText={_confirmConfig?.cancelText}
+        onConfirm={_handleConfirmAction}
+        onCancel={_handleConfirmCancel}
+        isDestructive={_confirmConfig?.isDestructive}
+      />
+
+      <OverlayModal
+        visible={modalVisible}
+        content={_modalConfig?.content}
+        onDismiss={hideModal}
+        dismissable={_modalConfig?.dismissable}
+      />
+
+      <OverlaySheet
+        visible={sheetVisible}
+        title={_sheetConfig?.title}
+        content={_sheetConfig?.content}
+        onDismiss={hideSheet}
+      />
+
+      <OverlayToast
+        visible={_toastVisible}
+        message={_toastConfig?.message || ""}
+        onDismiss={_dismissToast}
+        duration={_toastConfig?.duration}
+        variant={_toastConfig?.variant}
+        icon={_toastConfig?.icon}
+      />
+
+      <OverlayLoader visible={isLoading} message={_loaderMessage} />
+    </>
+  );
+}

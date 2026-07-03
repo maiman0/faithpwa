@@ -241,40 +241,38 @@ export default function Settings() {
 
           <Divider style={{ width: "100%" }} />
 
-          <View style={{ width: "100%", gap: tokens.spacing.md }}>
-            <Text variant="titleSmall">What's New</Text>
-            {changelog.map((entry) => (
-              <View key={entry.version} style={{ gap: tokens.spacing.xs }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
+          {changelog[0] && (
+            <View style={{ width: "100%", gap: tokens.spacing.xs }}>
+              <Text variant="titleSmall">What's New</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text variant="labelLarge" style={{ fontWeight: "700" }}>
+                  Version {changelog[0].version}
+                </Text>
+                <Text
+                  variant="labelSmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
                 >
-                  <Text variant="labelLarge" style={{ fontWeight: "700" }}>
-                    Version {entry.version}
-                  </Text>
-                  <Text
-                    variant="labelSmall"
-                    style={{ color: theme.colors.onSurfaceVariant }}
-                  >
-                    {formatLongDate(entry.date)}
-                  </Text>
-                </View>
-                {entry.changes.map((change) => (
-                  <Text
-                    key={change}
-                    variant="bodySmall"
-                    style={{ color: theme.colors.onSurfaceVariant }}
-                  >
-                    {"• "}
-                    {change}
-                  </Text>
-                ))}
+                  {formatLongDate(changelog[0].date)}
+                </Text>
               </View>
-            ))}
-          </View>
+              {changelog[0].changes.map((change) => (
+                <Text
+                  key={change}
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {"• "}
+                  {change}
+                </Text>
+              ))}
+            </View>
+          )}
 
           <Text
             variant="labelSmall"

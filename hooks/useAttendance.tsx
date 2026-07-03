@@ -3,6 +3,7 @@ import { useAttendanceStore } from '../contexts/api/attendanceStore';
 import { attendanceStatuses, getStatusFromRecord } from '../constants/attendance';
 import { toDateKey } from '../helpers/attendance';
 import type { Attendance } from '../contexts/api/attendance';
+import { useAuth } from '../contexts/authContext';
 
 export const useAttendance = () => {
   const {
@@ -15,13 +16,16 @@ export const useAttendance = () => {
     setOperationView,
     clear,
   } = useAttendanceStore();
+  const { user } = useAuth();
 
-  // Initial fetch of attendance records and status descriptions
+  // Initial fetch of attendance records and status descriptions. Gated on
+  // `user` so a sign-out (which clears the store) doesn't immediately
+  // re-trigger a doomed fetch with a session that no longer exists.
   useEffect(() => {
-    if (records.length === 0 && !loading && !error) {
+    if (user && records.length === 0 && !loading && !error) {
       fetchAttendance();
     }
-  }, [records.length, loading, error, fetchAttendance]);
+  }, [user, records.length, loading, error, fetchAttendance]);
 
   // Statistics for dashboard or insights
   const stats = useMemo(() => {

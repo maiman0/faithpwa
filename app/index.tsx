@@ -94,7 +94,7 @@ export default function Login() {
               maxWidth: 420,
               borderRadius: tokens.radii.xl,
               backgroundColor: theme.colors.surface,
-              paddingVertical: tokens.spacing.md,
+              paddingVertical: tokens.spacing.sm,
               paddingHorizontal: tokens.spacing.lg,
               gap: tokens.spacing.sm,
               ...(Platform.OS === "web" && {
@@ -110,14 +110,14 @@ export default function Login() {
             <View
               style={{
                 alignItems: "center",
-                gap: tokens.spacing.xl,
+                gap: tokens.spacing.md,
               }}
             >
               <Image
                 source={require("../assets/img/logo.png")}
                 style={{
-                  width: 140,
-                  height: 140,
+                  width: 96,
+                  height: 96,
                   resizeMode: "contain",
                 }}
               />
@@ -160,6 +160,7 @@ export default function Login() {
               <TextInput
                 label="Username"
                 mode="outlined"
+                dense
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -185,6 +186,7 @@ export default function Login() {
                 ref={passwordRef}
                 label="Password"
                 mode="outlined"
+                dense
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -214,14 +216,14 @@ export default function Login() {
             </View>
 
             <View
-              style={{ marginTop: tokens.spacing.md, gap: tokens.spacing.xl }}
+              style={{ marginTop: tokens.spacing.xs, gap: tokens.spacing.md }}
             >
               <Button
                 mode="contained"
                 onPress={handleLogin}
                 disabled={!username || !password || isSubmitting}
                 contentStyle={{
-                  height: 56,
+                  height: 52,
                 }}
                 style={{
                   borderRadius: tokens.radii.lg,
@@ -255,8 +257,8 @@ export default function Login() {
 
             <View
               style={{
-                marginTop: tokens.spacing.xl,
-                paddingTop: tokens.spacing.lg,
+                marginTop: tokens.spacing.lg,
+                paddingTop: tokens.spacing.md,
                 borderTopWidth: 1,
                 borderTopColor: theme.colors.surfaceVariant,
                 alignItems: "center",

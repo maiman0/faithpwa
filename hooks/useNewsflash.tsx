@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import RenderHTML from 'react-native-render-html';
 import { useBroadcastStore } from '../contexts/api/broadcastStore';
 import { useOverlay } from '../contexts/overlayContext';
+import { useAuth } from '../contexts/authContext';
 import { newsflashPriorities } from '../constants/newsflash';
 import { type Broadcast } from '../contexts/api/broadcast';
 import AcknowledgeButton from '../components/newsflash/acknowledgeButton';
@@ -14,6 +15,7 @@ export const useNewsflash = (limit?: number) => {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { showSheet, hideSheet, toast, showLoader, hideLoader } = useOverlay();
+  const { user } = useAuth();
   const {
     broadcasts,
     loading,
@@ -25,12 +27,14 @@ export const useNewsflash = (limit?: number) => {
     acknowledge,
   } = useBroadcastStore();
 
-  // Fetch broadcasts on mount if list is empty
+  // Fetch broadcasts on mount if list is empty. Gated on `user` so a
+  // sign-out (which clears the store) doesn't immediately re-trigger a
+  // doomed fetch with a session that no longer exists.
   useEffect(() => {
-    if (broadcasts.length === 0 && !loading && !error) {
+    if (user && broadcasts.length === 0 && !loading && !error) {
       fetchBroadcasts();
     }
-  }, [broadcasts.length, loading, error, fetchBroadcasts]);
+  }, [user, broadcasts.length, loading, error, fetchBroadcasts]);
 
   const isAcknowledged = useCallback(
     (item: Broadcast) => item.Acknowledged === 1,

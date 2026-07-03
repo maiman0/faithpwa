@@ -14,6 +14,7 @@ ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
 # Copy the rest of the source and export the web build to /app/dist
 COPY . .
 RUN npx expo export --platform web --output-dir dist
+RUN node scripts/inject-pwa-meta.js dist/index.html
 
 # ===== Stage 2: serve the bundle with nginx =====
 FROM nginx:1.27-alpine

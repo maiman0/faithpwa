@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 This mirrors the in-app changelog shown in Settings → About → "What's New"
 (`constants/about.ts`). Update both together.
 
+## [0.5.0] - 2026-07-03
+
+- Session restore failures on app launch now show an error toast instead of failing silently
+- Fixed a burst of unauthorized (401) requests firing right after sign-out — attendance, leave, room, staff, and newsflash no longer auto-refetch while there's no active session
+
 ## [0.4.0] - 2026-07-03
 
 - Home header avatar now shows a chevron-down badge signaling it opens the account menu

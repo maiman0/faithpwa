@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useRoomStore } from '../contexts/api/roomStore';
 import { getRoomAvailabilityByDay, type BookingItem, type Room } from '../contexts/api/room';
 import { useOverlay } from '../contexts/overlayContext';
+import { useAuth } from '../contexts/authContext';
 import { useStaff } from './useStaff';
 import {
   todayApiDate,
@@ -52,16 +53,20 @@ export const useRoom = () => {
 
   const { staff } = useStaff();
   const { toast, showLoader, hideLoader, showSheet, hideSheet, confirm } = useOverlay();
+  const { user } = useAuth();
 
-  // Initial fetch of rooms and bookings
+  // Initial fetch of rooms and bookings. Gated on `user` so a sign-out
+  // (which clears the store) doesn't immediately re-trigger a doomed fetch
+  // with a session that no longer exists.
   useEffect(() => {
+    if (!user) return;
     if (rooms.length === 0 && !loading && !error) {
       fetchRooms();
     }
     if (myBookings.length === 0 && !loading && !error) {
       fetchBookings();
     }
-  }, [rooms.length, myBookings.length, loading, error, fetchRooms, fetchBookings]);
+  }, [user, rooms.length, myBookings.length, loading, error, fetchRooms, fetchBookings]);
 
   // Statistics for dashboard
   const stats = useMemo(() => {

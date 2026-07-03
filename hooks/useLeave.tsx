@@ -4,6 +4,7 @@ import { Text, useTheme, Divider, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLeaveStore } from '../contexts/api/leaveStore';
 import { useOverlay } from '../contexts/overlayContext';
+import { useAuth } from '../contexts/authContext';
 import { LeaveStatus, leaveStatusStyles, LEAVE_TYPES, LEAVE_PERIODS, LEAVE_REASONS } from '../constants/leave';
 import { leaveRequiresClinic, leaveRequiresDocument, leaveRequirementNote, toApiDate, formatLeaveDurationLabel } from '../helpers/leave';
 import { daysBetweenInclusive } from '../helpers/date';
@@ -18,6 +19,7 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
   const theme = useTheme();
   const router = useRouter();
   const { showSheet, hideSheet, toast, confirm, showModal, hideModal, showLoader, hideLoader } = useOverlay();
+  const { user } = useAuth();
   const {
     leaves,
     balances,
@@ -237,14 +239,17 @@ export const useLeave = (statusFilter: LeaveStatus = 'All') => {
     }
   };
 
+  // Gated on `user` so a sign-out (which clears the store) doesn't
+  // immediately re-trigger a doomed fetch with a session that no longer exists.
   useEffect(() => {
+    if (!user) return;
     if (leaves.length === 0 && !loading && !error) {
       fetchLeaves();
     }
     if (!balances && !loading && !error) {
       fetchBalances();
     }
-  }, [leaves.length, balances, loading, error, fetchLeaves, fetchBalances]);
+  }, [user, leaves.length, balances, loading, error, fetchLeaves, fetchBalances]);
 
   const handleCancel = (id: number) => {
     confirm({

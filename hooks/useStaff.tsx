@@ -1,28 +1,32 @@
 import { useEffect, useCallback } from 'react';
 import { useStaffStore } from '../contexts/api/staffStore';
 import { useOverlay } from '../contexts/overlayContext';
+import { useAuth } from '../contexts/authContext';
 import { useRouter } from 'expo-router';
 import { StaffResponse } from '../contexts/api/staff';
 
 export const useStaff = () => {
-  const { 
-    staff, 
-    loading, 
-    error, 
-    fetchStaff, 
-    updateStaff: apiUpdateStaff, 
-    clear 
+  const {
+    staff,
+    loading,
+    error,
+    fetchStaff,
+    updateStaff: apiUpdateStaff,
+    clear
   } = useStaffStore();
 
   const { showLoader, hideLoader, toast } = useOverlay();
+  const { user } = useAuth();
   const router = useRouter();
 
-  // Automatically fetch staff if not already loaded
+  // Automatically fetch staff if not already loaded. Gated on `user` so a
+  // sign-out (which clears the store) doesn't immediately re-trigger a
+  // doomed fetch with a session that no longer exists.
   useEffect(() => {
-    if (!staff && !loading && !error) {
+    if (user && !staff && !loading && !error) {
       fetchStaff();
     }
-  }, [staff, loading, error, fetchStaff]);
+  }, [user, staff, loading, error, fetchStaff]);
 
   const updateProfile = useCallback(async (data: Partial<StaffResponse>) => {
     showLoader("Updating profile...");

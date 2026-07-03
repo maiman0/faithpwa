@@ -212,19 +212,10 @@ function AppContent({ fontsLoaded }: { fontsLoaded: boolean }) {
                   height: 44,
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                   paddingHorizontal: 28,
                 }}
               >
-                <Text
-                  style={{
-                    color: theme.colors.onSurface,
-                    fontSize: 13,
-                    fontWeight: "700",
-                  }}
-                >
-                  9:41
-                </Text>
                 <View
                   style={{
                     flexDirection: "row",

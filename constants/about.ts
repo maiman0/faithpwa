@@ -5,9 +5,17 @@ export interface ChangelogEntry {
 }
 
 export const APP_NAME = "FAITH Workspace";
-export const APP_VERSION = "0.4.0";
+export const APP_VERSION = "0.5.0";
 
 export const changelog: ChangelogEntry[] = [
+  {
+    version: "0.5.0",
+    date: "2026-07-03",
+    changes: [
+      "Session restore failures on app launch now show an error toast instead of failing silently",
+      "Fixed a burst of unauthorized (401) requests firing right after sign-out — attendance, leave, room, staff, and newsflash no longer auto-refetch while there's no active session",
+    ],
+  },
   {
     version: "0.4.0",
     date: "2026-07-03",

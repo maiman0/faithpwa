@@ -85,9 +85,10 @@ Faith (HRMS PWA First)
 │   │   ├── Goal - Make the web build feel native on any surface: full-bleed on real phones/installed PWA, a phone-mockup frame in a normal desktop browser tab.
 │   │   └── Features
 │   │       ├── Implemented in app/_layout.tsx (AppContent) as a React/View-based frame — app/+html.tsx customization does NOT apply, since web.output is "single" (Expo ignores +html.tsx in that mode); confirmed by inspecting `expo export -p web` output.
-│   │       ├── Desktop-width, non-standalone: renders a phone bezel (dark rounded frame) with a fake status bar (time + signal/wifi/battery icons), a notch cut into the status bar row, and a fake home indicator — status bar and home indicator are normal flex rows (not absolute overlays), so app content gets real top/bottom safe-area space instead of sitting under them.
+│   │       ├── Desktop-width, non-standalone: renders a phone bezel (dark rounded frame) with a fake status bar (signal/wifi/battery icons, right-aligned), a notch cut into the status bar row, and a fake home indicator — status bar and home indicator are normal flex rows (not absolute overlays), so app content gets real top/bottom safe-area space instead of sitting under them.
 │   │       ├── No-op on mobile-width screens (existing plain SafeAreaView path, unchanged)
-│   │       └── Collapses via matchMedia("(display-mode: standalone)") so an installed PWA still fills the screen natively
+│   │       ├── Collapses via matchMedia("(display-mode: standalone)") so an installed PWA still fills the screen natively
+│   │       └── scripts/inject-pwa-meta.js patches the exported dist/index.html post-build (wired into the Dockerfile) — adds manifest link, apple-touch-icon, apple-mobile-web-app-* meta, and viewport-fit=cover, since +html.tsx itself never runs in "single" output mode.
 │   │
 │   └── Overlay Demo (app/main.tsx)
 │       ├── Goal - Give a place to exercise every Overlay primitive (alert, confirm, toast, modal, sheet, loader) without wiring one into a real screen.
@@ -102,7 +103,6 @@ Todo
 
 Revise
 ├── App
-│   ├── CONFIRMED via `expo export -p web`: shipped dist/index.html only has Expo's default template head — app/+html.tsx's manifest link, apple-touch-icon, mobile-web-app-capable/apple-mobile-web-app-* meta, and custom viewport (`viewport-fit=cover`, `user-scalable=no`) are all absent in production (web.output effectively "single" ignores +html.tsx, as already suspected). Two concrete consequences: (1) no manifest link/apple-touch-icon → weaker "Add to Home Screen" install experience; (2) missing `viewport-fit=cover` means `env(safe-area-inset-*)` resolves to 0 on notched devices, so react-native-safe-area-context spacing (app/_layout.tsx SafeAreaView, components/overlay/sheet.tsx + toast.tsx insets) may not reserve space for the notch/home-indicator in the actual installed PWA — verify on a real notched iPhone.
 │   ├── showModal()/showSheet() content is still captured as a static JSX snapshot at call time (contexts/overlayContext.tsx) — any value baked into that content as a plain prop (not read via a hook inside a child component) goes stale if it changes while the overlay is open. Home's account picker (app/(tabs)/home/index.tsx, operationView label) has the same pattern; low-risk there since the modal closes immediately on selection, but worth keeping in mind for future overlay content.
 │   └── expo-doctor flags 6 packages a patch version behind the installed SDK (expo, expo-document-picker, expo-file-system, expo-image-picker, expo-linking, expo-splash-screen) — run `npx expo install --check` to align.
 ├── Staff / Profile / Settings

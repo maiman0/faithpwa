@@ -183,6 +183,13 @@ FAITH Mobile emphasizes:
 
 ---
 
+## Changelog / Versioning Rule
+
+* `constants/about.ts` (`APP_VERSION`, `changelog`) and the version fields in `package.json` / `app.json` must only be bumped when the user explicitly requests a version/changelog update.
+* Do not add or edit changelog entries as a side effect of implementing a feature or fix — treat it as a separate, opt-in step.
+
+---
+
 ## Before Completing Any Module
 
 1. Verify TypeScript has no errors

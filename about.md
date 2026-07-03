@@ -80,28 +80,3 @@ Faith (HRMS PWA First)
 │   │       ├── DesignProvider: spacing/radii/sizing/motion/elevation design tokens
 │   │       ├── Single Axios instance: 30s timeout, JWT + platform/app-version headers, global 401 → session-expired handler
 │   │       ├── Clinic search (debounced) + DocumentModal (leave document ref capture)
-│   │       ├── constants/icon.ts: single shared IconName type (keyof typeof MaterialCommunityIcons.glyphMap), used everywhere an icon name is stored/typed instead of duplicating the union or casting through `any`
-│   │       └── helpers/error.ts: getErrorMessage(error, fallback) narrows a caught `unknown` via axios.isAxiosError/instanceof Error, used by every contexts/api/* and data-hook catch block instead of `catch (e: any)`
-│   │
-│   ├── App Layout
-│   │   ├── Goal - Make the web build feel native on any surface: full-bleed on real phones/installed PWA, a phone-mockup frame in a normal desktop browser tab.
-│   │   └── Features
-│   │       ├── Implemented in app/_layout.tsx (AppContent) as a React/View-based frame — app/+html.tsx customization does NOT apply, since web.output is "single" (Expo ignores +html.tsx in that mode); confirmed by inspecting `expo export -p web` output.
-│   │       ├── Desktop-width, non-standalone: renders a phone bezel (dark rounded frame) with a fake status bar (signal/wifi/battery icons, right-aligned), a notch cut into the status bar row, and a fake home indicator — status bar and home indicator are normal flex rows (not absolute overlays), so app content gets real top/bottom safe-area space instead of sitting under them.
-│   │       ├── No-op on mobile-width screens (existing plain SafeAreaView path, unchanged)
-│   │       ├── Collapses via matchMedia("(display-mode: standalone)") so an installed PWA still fills the screen natively
-│   │       └── scripts/inject-pwa-meta.js patches the exported dist/index.html post-build (wired into the Dockerfile) — adds manifest link, apple-touch-icon, apple-mobile-web-app-* meta, and viewport-fit=cover, since +html.tsx itself never runs in "single" output mode.
-│   │
-│   └── Overlay Demo (app/main.tsx)
-│       ├── Goal - Give a place to exercise every Overlay primitive (alert, confirm, toast, modal, sheet, loader) without wiring one into a real screen.
-│       └── Features
-│           ├── Top-level unlisted route at /main (moved out of app/(tabs)/home/main.tsx) — not linked from any in-app button/nav, reached by typing the URL directly
-│           ├── Exempted from the root auth-redirect guard (app/_layout.tsx) so it's reachable whether logged in or out
-│           └── Demo toggle between populated state and NoData empty state
-
-
-Todo
-(none open)
-
-Revise
-(none open)

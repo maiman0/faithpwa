@@ -26,6 +26,8 @@ import Tail from "../../../components/tail";
 import { useRouter } from "expo-router";
 
 import { useStaff } from "../../../hooks/useStaff";
+import { APP_NAME, APP_VERSION, changelog } from "../../../constants/about";
+import { formatLongDate } from "../../../helpers/date";
 
 export default function Settings() {
   const theme = useTheme();
@@ -130,13 +132,13 @@ export default function Settings() {
 
           <View style={{ alignItems: "center", gap: 4 }}>
             <Text variant="headlineSmall" style={{ fontWeight: "800" }}>
-              FAITH Workspace
+              {APP_NAME}
             </Text>
             <Text
               variant="bodyMedium"
               style={{ color: theme.colors.onSurfaceVariant }}
             >
-              Version 2.4.0 (Build 1024)
+              Version {APP_VERSION}
             </Text>
           </View>
 
@@ -235,6 +237,43 @@ export default function Settings() {
                 color={theme.colors.onSecondaryContainer}
               />
             </TouchableOpacity>
+          </View>
+
+          <Divider style={{ width: "100%" }} />
+
+          <View style={{ width: "100%", gap: tokens.spacing.md }}>
+            <Text variant="titleSmall">What's New</Text>
+            {changelog.map((entry) => (
+              <View key={entry.version} style={{ gap: tokens.spacing.xs }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text variant="labelLarge" style={{ fontWeight: "700" }}>
+                    Version {entry.version}
+                  </Text>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: theme.colors.onSurfaceVariant }}
+                  >
+                    {formatLongDate(entry.date)}
+                  </Text>
+                </View>
+                {entry.changes.map((change) => (
+                  <Text
+                    key={change}
+                    variant="bodySmall"
+                    style={{ color: theme.colors.onSurfaceVariant }}
+                  >
+                    {"• "}
+                    {change}
+                  </Text>
+                ))}
+              </View>
+            ))}
           </View>
 
           <Text

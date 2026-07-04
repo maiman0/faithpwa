@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "faith": "node generate-faith.js",
-    "about": "node generate-about.js",
-    "progress": "node generate-progress.js"
+    "about": "node about/generate-about.js",
+    "progress": "node progress/generate-progress.js",
+    "migrate": "node migrate/generate-migrate.js"
   },
   "keywords": [],
   "author": "",

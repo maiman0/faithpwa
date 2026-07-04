@@ -18,7 +18,7 @@ const path = require("path");
 const { marked } = require("marked");
 const PDFDocument = require("pdfkit");
 
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, "..", "..");
 const MD_PATH = path.join(__dirname, "about.md");
 const ABOUT_TS_PATH = path.join(ROOT, "constants", "about.ts");
 const MDI_FONT_PATH = path.join(
